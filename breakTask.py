@@ -60,19 +60,80 @@ REQUIREMENT_INPUT = {
     ],
 }
 
+class ImpactHints(BaseModel):
+    related_modules: List[str] = Field(
+        default_factory=list,
+        description=(
+            "Tên module/class dự kiến liên quan. "
+            "Ví dụ: TaskService, UserService, DepartmentService."
+        ),
+    )
+
+    related_tables: List[str] = Field(
+        default_factory=list,
+        description=(
+            "Tên bảng dự kiến liên quan. "
+            "Ví dụ: tasks, users, department_users."
+        ),
+    )
+
+    related_columns: List[str] = Field(
+        default_factory=list,
+        description=(
+            "Tên cột dự kiến liên quan, ưu tiên định dạng table.column. "
+            "Ví dụ: tasks.status, department_users.user_id."
+        ),
+    )
+
+    technical_keywords: List[str] = Field(
+        default_factory=list,
+        description=(
+            "Từ khóa kỹ thuật hỗ trợ tìm kiếm trong tên class, "
+            "method, table và column."
+        ),
+    )
+
 os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
 
 CHANGE_TYPES = ["Tính năng mới", "Sửa tính năng có sẵn", "Sửa lỗi (bugfix)", "Gỡ bỏ tính năng", "Khác"]
 
 
 class RequirementInput(BaseModel):
-    title: str = Field(description="Tiêu đề ngắn gọn")
-    requirement: str = Field(description="Mô tả yêu cầu nghiệp vụ")
-    change_type: str = Field(default="Khác", description=f"Một trong: {CHANGE_TYPES}")
-    current_behavior: str = Field(default="", description="Hành vi hiện tại (nếu là sửa tính năng có sẵn)")
-    expected_behavior: str = Field(default="", description="Hành vi mong muốn sau khi thay đổi")
-    business_rules: List[str] = Field(default_factory=list, description="Các business rule cụ thể cần tuân thủ")
+    title: str = Field(
+        description="Tiêu đề ngắn gọn"
+    )
 
+    requirement: str = Field(
+        description="Mô tả yêu cầu nghiệp vụ"
+    )
+
+    change_type: str = Field(
+        default="Khác",
+        description=f"Một trong: {CHANGE_TYPES}",
+    )
+
+    current_behavior: str = Field(
+        default="",
+        description="Hành vi hiện tại",
+    )
+
+    expected_behavior: str = Field(
+        default="",
+        description="Hành vi mong muốn sau khi thay đổi",
+    )
+
+    business_rules: List[str] = Field(
+        default_factory=list,
+        description="Các business rule cụ thể cần tuân thủ",
+    )
+
+    impact_hints: ImpactHints = Field(
+        default_factory=ImpactHints,
+        description=(
+            "Phạm vi kỹ thuật dự kiến do người dùng cung cấp. "
+            "Chỉ dùng để hỗ trợ retrieval, không phải kết luận chắc chắn."
+        ),
+    )
 
 def count_prompt_tokens(llm, system_prompt, user_prompt):
     try:
@@ -89,17 +150,58 @@ def count_prompt_tokens(llm, system_prompt, user_prompt):
         print(f"[WARN] Không đếm được token: {e}")
         return None
 
-def requirement_to_search_text(req: RequirementInput) -> str:
-    """Gộp toàn bộ field thành 1 đoạn text để dùng cho bước rule_based_filter (tokenize/matching)."""
-    parts = [req.title, req.requirement, req.current_behavior, req.expected_behavior]
+def requirement_to_search_text(
+    req: RequirementInput,
+) -> str:
+    """
+    Tạo nội dung dùng để retrieval.
+
+    Ngoài requirement nghiệp vụ, đưa thêm technical hints vào
+    để khớp với tên class, method, bảng và cột trong Code Map.
+    """
+    parts = [
+        req.title,
+        req.requirement,
+        req.current_behavior,
+        req.expected_behavior,
+    ]
+
     parts.extend(req.business_rules)
-    return "\n".join(p for p in parts if p)
+
+    hints = req.impact_hints
+
+    parts.extend(hints.related_modules)
+    parts.extend(hints.related_tables)
+    parts.extend(hints.related_columns)
+    parts.extend(hints.technical_keywords)
+
+    return "\n".join(
+        str(part).strip()
+        for part in parts
+        if part and str(part).strip()
+    )
 
 
-def requirement_to_prompt_text(req: RequirementInput) -> str:
-    """Format có cấu trúc rõ ràng để đưa vào prompt cho AI - KHÔNG gộp chung 1 blob nữa,
-    để AI phân biệt được đâu là hành vi hiện tại/mong muốn/business rule."""
-    rules_text = "\n".join(f"  - {r}" for r in req.business_rules) if req.business_rules else "  (không có)"
+def requirement_to_prompt_text(
+    req: RequirementInput,
+) -> str:
+    rules_text = (
+        "\n".join(
+            f"  - {rule}"
+            for rule in req.business_rules
+        )
+        if req.business_rules
+        else "  (không có)"
+    )
+
+    hints = req.impact_hints
+
+    hints_text = json.dumps(
+        hints.model_dump(),
+        ensure_ascii=False,
+        indent=2,
+    )
+
     return f"""Tiêu đề: {req.title}
 Loại thay đổi: {req.change_type}
 
@@ -107,13 +209,20 @@ Mô tả yêu cầu:
 {req.requirement}
 
 Hành vi hiện tại:
-{req.current_behavior or "(không có - có thể là tính năng hoàn toàn mới)"}
+{req.current_behavior or "(không có - có thể là tính năng mới)"}
 
-Hành vi mong muốn sau khi thay đổi:
+Hành vi mong muốn:
 {req.expected_behavior or "(chưa nêu rõ)"}
 
-Business rules cần tuân thủ:
+Business rules:
 {rules_text}
+
+Phạm vi kỹ thuật dự kiến do người dùng cung cấp:
+{hints_text}
+
+Lưu ý: impact_hints chỉ dùng hỗ trợ tìm kiếm và phân tích.
+Phải kiểm tra lại với Code Map, không được mặc định tất cả module
+trong impact_hints đều cần sửa.
 """
 
 
@@ -332,7 +441,7 @@ def rule_based_filter(requirement_text, code_map, index=None, max_hops=1,
         max_possible_score = sum(weights.values()) or 1
 
         scores = {}
-        for name, tokens in idx["doc_tokens"].items():
+        for name, tokens in idx["module_tokens"].items():
             matched_tokens = tokens & req_tokens
             if matched_tokens:
                 scores[name] = sum(weights[t] for t in matched_tokens)
@@ -406,10 +515,20 @@ class UnitProcess(BaseModel):
     level1: str = Field(description="LEVEL1 업무/시스템 명 - tên hệ thống/nghiệp vụ cấp 1")
     level2: str = Field(description="LEVEL2 주업무 명 - tên nghiệp vụ chính")
     level3: str = Field(description="LEVEL3 화면 혹은 상세업무명 - tên màn hình/nghiệp vụ chi tiết, tiếng Việt")
-    level4: str = Field(description="LEVEL4 단위프로세스명 - tên đơn vị xử lý, tiếng Việt, ngắn gọn")
-    description: str = Field(
-        description="단위프로세스 상세구현 설명 - mô tả chi tiết, PHẢI liệt kê rõ tên bảng và cột thật "
-                    "lấy từ database_schema/affected_columns được cung cấp (vd: '- TB_CORP_WIRED_MNP (MNP_STAT_CD, RETRY_COUNT)')"
+    level4: str = Field(
+        description=(
+            "LEVEL4 - đơn vị triển khai cụ thể nhất. "
+            "Phải mô tả developer cần thêm hoặc sửa đúng một hành vi "
+            "trong code. Level4 nên có cấu trúc: "
+            "[Hành động] + [đối tượng] + [điều kiện hoặc dữ liệu liên quan]. "
+            "Nếu Code Map có đủ dữ liệu thì nêu rõ bảng hoặc cột liên quan. "
+            "Ví dụ: 'Kiểm tra thành viên thuộc phòng ban', "
+            "'Truy vấn công việc theo người dùng và khoảng thời gian', "
+            "'Tính tỷ lệ hoàn thành từ trạng thái công việc', "
+            "'Cập nhật trạng thái báo cáo sang chờ xác nhận'. "
+            "Không dùng nội dung chung chung như 'Xử lý báo cáo', "
+            "'Quản lý dữ liệu' hoặc 'Cập nhật thông tin'."
+        )
     )
     dev_type: str = Field(description="개발유형 - loại hình phát triển kỹ thuật")
     process_type: str = Field(description=f"처리유형 - PHẢI chọn đúng 1 trong: {PROCESS_TYPES}")
@@ -449,6 +568,30 @@ Bạn chỉ được sử dụng:
 Không được tự bịa module, method, bảng hoặc cột.
 
 Không ước lượng effort hoặc số giờ.
+
+QUY TẮC SỬ DỤNG IMPACT HINTS:
+
+- impact_hints là phạm vi kỹ thuật dự kiến do người dùng cung cấp
+  nhằm hỗ trợ quá trình tìm kiếm module, method, bảng và cột.
+
+- impact_hints không phải kết luận chắc chắn rằng tất cả module
+  được cung cấp đều phải sửa.
+
+- Phải kiểm tra lại module được hint với requirement và code_context.
+
+- Nếu module chỉ cung cấp dữ liệu hoặc được chức năng mới gọi lại,
+  đánh dấu impact_level="indirect".
+
+- Chỉ đánh dấu impact_level="direct" khi có căn cứ module hiện tại
+  phải thay đổi source code.
+
+- Không được sử dụng module, method, bảng hoặc cột chỉ tồn tại trong
+  impact_hints nhưng không tồn tại trong Code Map.
+
+- Với tính năng mới chưa có module chính:
+  các module hiện có như TaskService, UserService hoặc
+  DepartmentService có thể là indirect; module mới chưa xác định
+  vẫn phải để module="" và related_methods=[].
 
 QUY TẮC BREAKDOWN:
 
@@ -533,6 +676,91 @@ Nhiệm vụ:
 4. Không tạo task chung chung như phân tích, coding, review hoặc unit test.
 """
 
+def collect_hint_schema(
+    req: RequirementInput,
+    code_map,
+):
+    """
+    Lấy schema thật từ Code Map dựa trên related_tables và
+    related_columns trong impact_hints.
+
+    Không sử dụng trực tiếp tên cột do người dùng nhập nếu cột đó
+    không tồn tại trong database_schema.
+    """
+    hints = req.impact_hints
+
+    hinted_tables = {
+        table_name.strip().upper()
+        for table_name in hints.related_tables
+        if table_name.strip()
+    }
+
+    hinted_columns_by_table = {}
+
+    for column_value in hints.related_columns:
+        value = column_value.strip()
+
+        if not value:
+            continue
+
+        if "." in value:
+            table_name, column_name = value.rsplit(
+                ".",
+                1,
+            )
+
+            hinted_columns_by_table.setdefault(
+                table_name.strip().upper(),
+                set(),
+            ).add(
+                column_name.strip().upper()
+            )
+
+    result = {}
+
+    database_tables = (
+        code_map
+        .get("database_schema", {})
+        .get("tables", [])
+    )
+
+    for table in database_tables:
+        table_name = table.get("name", "")
+        normalized_table = table_name.upper()
+
+        if (
+            normalized_table not in hinted_tables
+            and normalized_table
+            not in hinted_columns_by_table
+        ):
+            continue
+
+        real_columns = {
+            column.get("name", "")
+            for column in table.get("columns", [])
+            if column.get("name")
+        }
+
+        requested_columns = (
+            hinted_columns_by_table.get(
+                normalized_table,
+                set(),
+            )
+        )
+
+        if requested_columns:
+            selected_columns = {
+                column_name
+                for column_name in real_columns
+                if column_name.upper()
+                in requested_columns
+            }
+        else:
+            selected_columns = real_columns
+
+        result[table_name] = selected_columns
+
+    return result
 
 def build_user_prompt(
     req: RequirementInput,
@@ -573,9 +801,16 @@ def build_user_prompt(
             compact_method = {
                 "method_key": (
                     method.get("method_key")
-                    or f"{module['module_name']}.{method.get('name', '')}"
+                    or (
+                        f"{module['module_name']}."
+                        f"{method.get('name', '')}"
+                    )
                 ),
                 "name": method.get("name", ""),
+                "calls_to_internal": method.get(
+                    "calls_to_internal",
+                    [],
+                ),
             }
 
             if method.get("endpoint"):
@@ -603,12 +838,34 @@ def build_user_prompt(
         compact_modules.append(compact_module)
 
     # Chỉ gửi đúng table/column đã xuất hiện trong method được chọn
+    
+    # Schema lấy từ method thực tế
+    merged_table_columns = {
+        table_name: set(columns)
+        for table_name, columns
+        in selected_table_columns.items()
+    }
+
+    # Schema bổ sung từ impact_hints, nhưng phải được xác minh
+    # tồn tại thật trong database_schema
+    hint_schema = collect_hint_schema(
+        req=req,
+        code_map=code_map,
+    )
+
+    for table_name, columns in hint_schema.items():
+        merged_table_columns.setdefault(
+            table_name,
+            set(),
+        ).update(columns)
+
     compact_schema = [
         {
             "name": table_name,
             "columns": sorted(columns),
         }
-        for table_name, columns in selected_table_columns.items()
+        for table_name, columns
+        in merged_table_columns.items()
     ]
 
     prompt_data = {
@@ -653,6 +910,14 @@ def select_relevant_methods(
         method_tokens |= _tokenize(method.get("name", ""))
         method_tokens |= _tokenize(method_key)
         method_tokens |= _tokenize(method.get("endpoint", ""))
+        
+        for called_method in method.get(
+            "calls_to_internal",
+            [],
+        ):
+            method_tokens |= _tokenize(
+                called_method
+            )
 
         for table_name in method.get("affected_tables", []):
             method_tokens |= _tokenize(table_name)
@@ -709,9 +974,103 @@ def select_relevant_methods(
 
     return scored_methods[:max_methods]
 
+
+def apply_impact_hints(
+    scores,
+    reasons,
+    req: RequirementInput,
+    index,
+):
+    """
+    Cộng điểm mạnh cho module/table/column được người dùng chỉ định.
+
+    Hints chỉ hỗ trợ retrieval. Việc đánh giá direct/indirect
+    vẫn do LLM thực hiện dựa trên Code Map.
+    """
+    hints = req.impact_hints
+
+    # --------------------------------------------------------
+    # 1. Exact match tên module
+    # --------------------------------------------------------
+    module_lookup = {
+        module_name.upper(): module_name
+        for module_name in index["name_to_module"]
+    }
+
+    for hinted_module in hints.related_modules:
+        normalized_module = hinted_module.strip().upper()
+
+        matched_module = module_lookup.get(
+            normalized_module
+        )
+
+        if matched_module:
+            scores[matched_module] += 20
+
+            reasons.setdefault(
+                matched_module,
+                [],
+            ).append(
+                f"hint_module={hinted_module}"
+            )
+
+    # --------------------------------------------------------
+    # 2. Exact match tên bảng
+    # --------------------------------------------------------
+    for hinted_table in hints.related_tables:
+        normalized_table = hinted_table.strip().upper()
+
+        matched_modules = index["table_to_modules"].get(
+            normalized_table,
+            set(),
+        )
+
+        for module_name in matched_modules:
+            scores[module_name] += 15
+
+            reasons.setdefault(
+                module_name,
+                [],
+            ).append(
+                f"hint_table={hinted_table}"
+            )
+
+    # --------------------------------------------------------
+    # 3. Exact match tên cột
+    # Hỗ trợ cả "status" và "tasks.status"
+    # --------------------------------------------------------
+    for hinted_column in hints.related_columns:
+        column_value = hinted_column.strip()
+
+        if not column_value:
+            continue
+
+        column_name = (
+            column_value
+            .split(".")[-1]
+            .strip()
+            .upper()
+        )
+
+        matched_modules = index["column_to_modules"].get(
+            column_name,
+            set(),
+        )
+
+        for module_name in matched_modules:
+            scores[module_name] += 10
+
+            reasons.setdefault(
+                module_name,
+                [],
+            ).append(
+                f"hint_column={hinted_column}"
+            )
+
 def score_modules(
     requirement_text,
     code_map,
+    req: Optional[RequirementInput] = None,
     index=None,
     max_modules=5,
     min_relative_score=0.12,
@@ -723,10 +1082,18 @@ def score_modules(
     requirement_upper = requirement_text.upper()
 
     def idf(token):
-        document_frequency = idx["df"].get(token, 0)
-        return math.log(
-            (total_modules + 1) / (document_frequency + 1)
-        ) + 1
+        document_frequency = idx["df"].get(
+            token,
+            0,
+        )
+
+        return (
+            math.log(
+                (total_modules + 1)
+                / (document_frequency + 1)
+            )
+            + 1
+        )
 
     token_weights = {
         token: idf(token)
@@ -736,7 +1103,12 @@ def score_modules(
     scores = Counter()
     reasons = {}
 
-    for module_name, tokens in idx["module_tokens"].items():
+    # --------------------------------------------------------
+    # 1. Keyword/IDF scoring
+    # --------------------------------------------------------
+    for module_name, tokens in idx[
+        "module_tokens"
+    ].items():
         matched_tokens = tokens & req_tokens
 
         if not matched_tokens:
@@ -747,34 +1119,88 @@ def score_modules(
             for token in matched_tokens
         )
 
+        # Match trực tiếp token trong tên module được cộng thêm điểm
+        module_name_tokens = _tokenize(module_name)
+
+        matched_module_name_tokens = (
+            module_name_tokens & req_tokens
+        )
+
+        if matched_module_name_tokens:
+            score += (
+                len(matched_module_name_tokens)
+                * 5
+            )
+
         scores[module_name] += score
-        reasons.setdefault(module_name, []).append(
+
+        reasons.setdefault(
+            module_name,
+            [],
+        ).append(
             f"keyword={sorted(matched_tokens)}"
         )
 
-    # Exact match tên bảng: tín hiệu rất mạnh
-    for table_name in idx["all_table_names"]:
-        if table_name.upper() in requirement_upper:
-            for module_name in idx["table_to_modules"].get(
-                table_name.upper(),
-                set(),
-            ):
-                scores[module_name] += 10
-                reasons.setdefault(module_name, []).append(
-                    f"table={table_name}"
-                )
+        if matched_module_name_tokens:
+            reasons[module_name].append(
+                "module_name="
+                f"{sorted(matched_module_name_tokens)}"
+            )
 
-    # Exact match tên cột: tín hiệu mạnh
+    # --------------------------------------------------------
+    # 2. Exact match tên bảng trong search text
+    # --------------------------------------------------------
+    for table_name in idx["all_table_names"]:
+        if table_name.upper() not in requirement_upper:
+            continue
+
+        for module_name in idx[
+            "table_to_modules"
+        ].get(
+            table_name.upper(),
+            set(),
+        ):
+            scores[module_name] += 10
+
+            reasons.setdefault(
+                module_name,
+                [],
+            ).append(
+                f"table={table_name}"
+            )
+
+    # --------------------------------------------------------
+    # 3. Exact match tên cột trong search text
+    # --------------------------------------------------------
     for column_name in idx["all_column_names"]:
-        if column_name.upper() in requirement_upper:
-            for module_name in idx["column_to_modules"].get(
-                column_name.upper(),
-                set(),
-            ):
-                scores[module_name] += 8
-                reasons.setdefault(module_name, []).append(
-                    f"column={column_name}"
-                )
+        if column_name.upper() not in requirement_upper:
+            continue
+
+        for module_name in idx[
+            "column_to_modules"
+        ].get(
+            column_name.upper(),
+            set(),
+        ):
+            scores[module_name] += 8
+
+            reasons.setdefault(
+                module_name,
+                [],
+            ).append(
+                f"column={column_name}"
+            )
+
+    # --------------------------------------------------------
+    # 4. Cộng điểm từ impact_hints
+    # --------------------------------------------------------
+    if req is not None:
+        apply_impact_hints(
+            scores=scores,
+            reasons=reasons,
+            req=req,
+            index=idx,
+        )
 
     if not scores:
         return []
@@ -790,11 +1216,23 @@ def score_modules(
         if score < threshold:
             continue
 
+        module = idx["name_to_module"].get(
+            module_name
+        )
+
+        if not module:
+            continue
+
         results.append({
-            "module": idx["name_to_module"][module_name],
+            "module": module,
             "score": round(score, 4),
-            "match_reasons": reasons.get(module_name, []),
-            "relation": "direct",
+            "match_reasons": reasons.get(
+                module_name,
+                [],
+            ),
+            # Đây chỉ là candidate relation.
+            # Gemini phải đánh giá lại direct/indirect.
+            "relation": "candidate",
         })
 
         if len(results) >= max_modules:
@@ -813,8 +1251,9 @@ def break_task(req: RequirementInput, code_map, llm=None, index=None):
     selected_modules = score_modules(
         requirement_text=search_text,
         code_map=code_map,
+        req=req,
         index=index,
-        max_modules=5,
+        max_modules=8,
         min_relative_score=0.20,
     )
 
@@ -958,7 +1397,6 @@ def break_task(req: RequirementInput, code_map, llm=None, index=None):
         unit_process["no"] = i
 
     return result_dict
-
 
 if __name__ == "__main__":
     code_map, index = load_code_map_cached(CODE_MAP_PATH)
