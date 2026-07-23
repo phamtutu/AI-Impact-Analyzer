@@ -1,5 +1,6 @@
 // ──────────────────────────────────────────────
 //  Effort Manager - Quản lý Effort (Development Effort)
+//  Theo bảng: Development Type, Change Type, Complexity
 // ──────────────────────────────────────────────
 
 // ─── State ───
@@ -45,9 +46,9 @@ function renderEffort() {
             <th style="width:50px;">ID</th>
             <th style="min-width:80px;">Dev Type</th>
             <th style="min-width:120px;">Dev Sub Type</th>
-            <th style="min-width:120px;">Change Type</th>
+            <th style="min-width:130px;">Change Type</th>
             <th style="width:70px;">Complexity</th>
-            <th style="width:100px;">Effort</th>
+            <th style="width:100px;">Effort (ngày)</th>
             <th style="width:120px;">Thao tác</th>
         </tr></thead><tbody>`;
 
@@ -61,7 +62,7 @@ function renderEffort() {
             <td>${esc(item.dev_sub_type)}</td>
             <td><span class="tag ${changeClass}">${esc(item.change_type)}</span></td>
             <td style="text-align:center;"><span class="tag ${colorClass}">${esc(item.complexity)}</span></td>
-            <td style="text-align:center;font-weight:700;font-family:var(--mono);font-size:14px;">${item.effort}</td>
+            <td style="text-align:center;font-weight:700;font-family:var(--mono);font-size:14px;color:var(--accent);">${item.effort}</td>
             <td>
                 <div class="actions-cell">
                     <button class="btn btn-secondary btn-sm" onclick="window.editEffort(${item.id})">✏️</button>
