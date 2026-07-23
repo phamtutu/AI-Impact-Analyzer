@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản lý source · Phân tích mã nguồn</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <style>
+        /* ── reset & base ── */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        :root {
+            --ink: #1a1d23;
+            --ink-soft: #5b6270;
+            --paper: #f6f7f5;
+            --panel: #ffffff;
+            --line: #dfe3de;
+            --green-head: #cfe3c3;
+            --green-head-strong: #a8c6a0;
+            --green-deep: #3f6b3a;
+            --accent: #2f5233;
+            --accent-soft: #e7efe4;
+            --red: #b23b3b;
+            --red-soft: #fbe9e9;
+            --amber: #a3760b;
+            --amber-soft: #faf1dc;
+            --mono: 'JetBrains Mono', monospace;
+            --sans: 'Be Vietnam Pro', sans-serif;
+        }
+        body {
+            margin: 0;
+            font-family: var(--sans);
+            color: var(--ink);
+            background: radial-gradient(circle at top right, #f5f9f6 0%, transparent 40%),
+                radial-gradient(circle at bottom left, #eef5ef 0%, transparent 45%),
+                linear-gradient(180deg, #fafbfc 0%, #eef2f3 100%);
+            min-height: 100vh;
+        }
+
+        /* ── Layout với sidebar dọc ── */
+        .app-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ── Sidebar dọc ── */
+        .sidebar {
+            width: 240px;
+            min-height: 100vh;
+            background: var(--panel);
+            border-right: 1px solid var(--line);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 20px 18px 12px;
+            border-bottom: 1px solid var(--line);
+            background: var(--accent);
+            color: #f4f6f2;
+        }
+        .sidebar-header .brand {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .sidebar-header .brand .no {
+            font-family: var(--mono);
+            font-size: 11px;
+            letter-spacing: .14em;
+            opacity: .75;
+        }
+        .sidebar-header h1 {
+            font-size: 15px;
+            margin: 0;
+            font-weight: 700;
+            letter-spacing: .01em;
+            line-height: 1.3;
+        }
+        .sidebar-header .sub {
+            font-size: 11px;
+            color: #dce7d8;
+            font-family: var(--mono);
+            margin-top: 4px;
+        }
+
+        /* ── Tab buttons dọc ── */
+        .tabbar-vertical {
+            display: flex;
+            flex-direction: column;
+            padding: 12px 8px;
+            gap: 2px;
+            flex: 1;
+        }
+
+        .tab-btn-vertical {
+            font-family: var(--sans);
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--ink-soft);
+            background: transparent;
+            border: none;
+            border-left: 3px solid transparent;
+            padding: 12px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-align: left;
+            width: 100%;
+            border-radius: 2px;
+            transition: all .15s ease;
+            text-decoration: none;
+        }
+        .tab-btn-vertical .tab-no {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--line);
+            font-weight: 600;
+            min-width: 24px;
+        }
+        .tab-btn-vertical:hover {
+            color: var(--accent);
+            background: var(--accent-soft);
+        }
+        .tab-btn-vertical.active {
+            color: var(--accent);
+            border-left-color: var(--green-deep);
+            background: var(--accent-soft);
+        }
+        .tab-btn-vertical.active .tab-no {
+            color: var(--green-deep);
+        }
+
+        .sidebar-footer {
+            padding: 12px 16px;
+            border-top: 1px solid var(--line);
+            font-size: 10.5px;
+            color: var(--ink-soft);
+            font-family: var(--mono);
+            text-align: center;
+        }
+
+        /* ── Main content ── */
+        .main-content {
+            flex: 1;
+            padding: 28px 32px 60px;
+            max-width: calc(100% - 240px);
+        }
+
+        /* ── panel ── */
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            box-shadow: 0 1px 0 rgba(0, 0, 0, .02);
+            margin-bottom: 24px;
+        }
+        .panel-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 18px;
+            background: var(--accent-soft);
+            border-bottom: 1px solid var(--line);
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .panel-head h2 {
+            font-size: 13px;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: .09em;
+            color: var(--accent);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .panel-head h2 .count {
+            font-family: var(--mono);
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--ink-soft);
+            background: #fff;
+            padding: 0 8px;
+            border-radius: 2px;
+            border: 1px solid var(--line);
+        }
+        .panel-body {
+            padding: 20px 22px;
+        }
+
+        /* ── form ── */
+        label {
+            display: block;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--ink-soft);
+            margin-bottom: 5px;
+        }
+        .field {
+            margin-bottom: 16px;
+        }
+        .row2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            font-family: var(--sans);
+            font-size: 14px;
+            color: var(--ink);
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 2px;
+            padding: 9px 11px;
+            resize: vertical;
+        }
+        input[type="text"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: 2px solid var(--green-deep);
+            outline-offset: 1px;
+            border-color: var(--green-deep);
+        }
+        .hint {
+            font-size: 11.5px;
+            color: var(--ink-soft);
+            margin-top: 4px;
+            font-family: var(--mono);
+        }
+
+        /* ── File picker ── */
+        .file-picker-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .file-picker-wrapper input[type="text"] {
+            flex: 1;
+            min-width: 200px;
+        }
+        .file-picker-btn {
+            background: var(--accent-soft);
+            border: 1px solid var(--line);
+            color: var(--accent);
+            padding: 9px 16px;
+            font-family: var(--sans);
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all .15s;
+            white-space: nowrap;
+        }
+        .file-picker-btn:hover {
+            background: var(--green-head);
+            border-color: var(--green-head-strong);
+        }
+
+        /* ── buttons ── */
+        .actions {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+        .submit-btn {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 12px 22px;
+            font-family: var(--sans);
+            font-weight: 700;
+            font-size: 14px;
+            letter-spacing: .02em;
+            cursor: pointer;
+            border-radius: 2px;
+            transition: background .15s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .submit-btn:hover {
+            background: var(--green-deep);
+        }
+        .submit-btn:disabled {
+            background: #9aa89a;
+            cursor: not-allowed;
+        }
+        .submit-btn .spinner {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, .4);
+            border-top-color: #fff;
+            animation: spin .7s linear infinite;
+            display: none;
+        }
+        .submit-btn.loading .spinner {
+            display: inline-block;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .refresh-btn {
+            background: transparent;
+            border: 1px solid var(--line);
+            color: var(--ink-soft);
+            padding: 9px 16px;
+            font-family: var(--sans);
+            font-size: 12.5px;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all .15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .refresh-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-soft);
+        }
+
+        /* ── error / success ── */
+        .err {
+            background: var(--red-soft);
+            border: 1px solid var(--red);
+            color: var(--red);
+            padding: 12px 14px;
+            font-size: 13px;
+            font-family: var(--mono);
+            margin-top: 14px;
+            display: none;
+        }
+        .success-msg {
+            background: var(--accent-soft);
+            border: 1px solid var(--green-head-strong);
+            color: var(--accent);
+            padding: 12px 14px;
+            font-size: 13px;
+            font-family: var(--mono);
+            margin-top: 14px;
+            display: none;
+        }
+
+        /* ── project stats ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+        }
+        .stat-card {
+            background: #fafcfa;
+            border: 1px solid var(--line);
+            padding: 14px 16px;
+            text-align: center;
+            border-radius: 2px;
+        }
+        .stat-card .num {
+            font-family: var(--mono);
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--accent);
+            line-height: 1.2;
+        }
+        .stat-card .lbl {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: var(--ink-soft);
+            margin-top: 4px;
+        }
+
+        /* ── empty ── */
+        .empty {
+            padding: 32px 16px;
+            text-align: center;
+            color: var(--ink-soft);
+            font-size: 13.5px;
+        }
+        .empty .glyph {
+            font-family: var(--mono);
+            font-size: 22px;
+            color: var(--line);
+            margin-bottom: 6px;
+        }
+
+        /* ── modules table ── */
+        .table-scroll {
+            overflow-x: auto;
+        }
+        table.uptable {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12.5px;
+        }
+        table.uptable th {
+            background: var(--green-head);
+            border: 1px solid var(--green-head-strong);
+            padding: 8px 10px;
+            text-align: left;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            color: #2d4227;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        table.uptable td {
+            border: 1px solid var(--line);
+            padding: 9px 10px;
+            vertical-align: top;
+        }
+        table.uptable tbody tr:nth-child(odd) {
+            background: #fbfcfa;
+        }
+        table.uptable tbody tr:hover {
+            background: var(--accent-soft);
+        }
+        td.mono {
+            font-family: var(--mono);
+            font-size: 11.5px;
+        }
+        .chip {
+            font-family: var(--mono);
+            font-size: 10.5px;
+            background: #eef1ec;
+            border: 1px solid var(--line);
+            padding: 2px 6px;
+            border-radius: 2px;
+            color: var(--ink);
+            display: inline-block;
+            margin: 1px 2px;
+        }
+        .tag {
+            font-family: var(--mono);
+            font-size: 10.5px;
+            padding: 2px 6px;
+            border-radius: 2px;
+            background: var(--accent-soft);
+            color: var(--accent);
+            white-space: nowrap;
+            display: inline-block;
+        }
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .method-item {
+            font-size: 12px;
+            padding: 2px 0;
+            border-bottom: 1px dotted var(--line);
+        }
+        .method-item:last-child {
+            border-bottom: none;
+        }
+        .method-item .mname {
+            font-family: var(--mono);
+            font-size: 11.5px;
+            font-weight: 600;
+        }
+        .method-item .mdetail {
+            color: var(--ink-soft);
+            font-size: 11px;
+        }
+
+        /* ── tables grid ── */
+        .tables-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 12px;
+        }
+        .table-card {
+            border: 1px solid var(--line);
+            padding: 12px 14px;
+            background: #fff;
+            border-left: 4px solid var(--green-head-strong);
+        }
+        .table-card .tname {
+            font-family: var(--mono);
+            font-weight: 600;
+            font-size: 13px;
+        }
+        .table-card .cols {
+            margin-top: 6px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .table-card .cols .chip {
+            font-size: 10px;
+        }
+
+        /* ── Pagination ── */
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        .pagination button {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            color: var(--ink);
+            padding: 6px 14px;
+            font-family: var(--sans);
+            font-size: 12.5px;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all .15s;
+        }
+        .pagination button:hover:not(:disabled) {
+            background: var(--accent-soft);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        .pagination button:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+        .pagination button.active {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+        .pagination .info {
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--ink-soft);
+            padding: 0 8px;
+        }
+
+        /* ── responsive ── */
+        @media (max-width: 768px) {
+            .app-layout {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                min-height: auto;
+                height: auto;
+                position: relative;
+                border-right: none;
+                border-bottom: 1px solid var(--line);
+            }
+            .sidebar-header {
+                padding: 14px 16px 10px;
+            }
+            .sidebar-header h1 {
+                font-size: 14px;
+            }
+            .tabbar-vertical {
+                flex-direction: row;
+                padding: 8px 12px;
+                overflow-x: auto;
+                flex-wrap: nowrap;
+            }
+            .tab-btn-vertical {
+                border-left: none;
+                border-bottom: 3px solid transparent;
+                padding: 10px 14px;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+            .tab-btn-vertical.active {
+                border-left: none;
+                border-bottom-color: var(--green-deep);
+            }
+            .main-content {
+                max-width: 100%;
+                padding: 20px 16px 40px;
+            }
+            .row2 {
+                grid-template-columns: 1fr;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .sidebar-footer {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-layout">
+
+    <!-- ═══ SIDEBAR DỌC ═══ -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="brand">
+                <h1>Quản lý source · Phân tích mã nguồn</h1>
+            </div>
+        </div>
+
+        <nav class="tabbar-vertical">
+            <a href="BreakTask.html" class="tab-btn-vertical">
+                <span class="tab-no">01</span> Phân tích tác động
+            </a>
+            <a href="MasterData.html" class="tab-btn-vertical">
+                <span class="tab-no">01</span> Quản lý master data
+            </a>
+            <a href="AnalyzerSourceCode.html" class="tab-btn-vertical active">
+                <span class="tab-no">03</span> Quản lý source
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+          
+        </div>
+    </aside>
+
+    <!-- ═══ MAIN CONTENT ═══ -->
+    <main class="main-content">
+
+        <!-- ─── Project Info ─── -->
+        <section class="panel" id="projectPanel">
+            <div class="panel-head">
+                <h2>📊 Thông tin project</h2>
+                <button class="refresh-btn" id="refreshProjectBtn">⟳ Tải lại</button>
+            </div>
+            <div class="panel-body" id="projectBody">
+                <div class="empty"><div class="glyph">— · · —</div>Chưa có dữ liệu. Hãy phân tích source code bên dưới.</div>
+            </div>
+        </section>
+
+        <!-- ─── Analyze Form ─── -->
+        <section class="panel">
+            <div class="panel-head">
+                <h2>🔬 Phân tích source code</h2>
+                <span style="font-family:var(--mono);font-size:11px;color:var(--ink-soft);">POST /analyze-source</span>
+            </div>
+            <div class="panel-body">
+                <form id="analyzeForm">
+                    <div class="field">
+                        <label for="sourcePath">Đường dẫn thư mục source code</label>
+                        <div class="file-picker-wrapper">
+                            <input type="text" id="sourcePath" placeholder="VD: D:/project/src" required />
+                            <button type="button" class="file-picker-btn" id="pickFolderBtn">📁 Chọn thư mục</button>
+                        </div>
+                        <div class="hint">Nhập đường dẫn hoặc bấm "Chọn thư mục" để chọn từ máy tính.</div>
+                    </div>
+                    <div class="actions">
+                        <button type="submit" class="submit-btn" id="analyzeBtn">
+                            <span class="spinner"></span>
+                            <span id="btnLabel">▶ Phân tích</span>
+                        </button>
+                        <span id="statusText" style="font-family:var(--mono);font-size:12px;color:var(--ink-soft);"></span>
+                    </div>
+                    <div class="err" id="errBox"></div>
+                    <div class="success-msg" id="successBox"></div>
+                </form>
+            </div>
+        </section>
+
+        <!-- ─── Modules ─── -->
+        <section class="panel" id="modulesPanel">
+            <div class="panel-head">
+                <h2>📦 Modules <span class="count" id="moduleCount">0</span></h2>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                    <input type="text" id="moduleFilter" placeholder="Lọc theo tên file..." style="width:200px;font-size:12px;padding:5px 8px;border:1px solid var(--line);border-radius:2px;font-family:var(--sans);" />
+                    <button class="refresh-btn" id="refreshModulesBtn">⟳</button>
+                </div>
+            </div>
+            <div class="panel-body" id="modulesBody">
+                <div class="empty"><div class="glyph">— · · —</div>Chưa có module nào được tải.</div>
+            </div>
+            <div class="panel-body" id="paginationContainer" style="padding-top:0;display:none;">
+                <div class="pagination" id="paginationControls"></div>
+            </div>
+        </section>
+
+        <!-- ─── Tables ─── -->
+        <section class="panel" id="tablesPanel">
+            <div class="panel-head">
+                <h2>🗄️ Database tables <span class="count" id="tableCount">0</span></h2>
+                <button class="refresh-btn" id="refreshTablesBtn">⟳ Tải lại</button>
+            </div>
+            <div class="panel-body" id="tablesBody">
+                <div class="empty"><div class="glyph">— · · —</div>Chưa có bảng nào được tải.</div>
+            </div>
+        </section>
+
+    </main>
+
+</div>
+
+<script>
+    // ──────────────────────────────────────────────
+    //  CONFIG
+    // ──────────────────────────────────────────────
+    const API_BASE = 'http://localhost:8000';
+
+    // ──────────────────────────────────────────────
+    //  DOM refs
+    // ──────────────────────────────────────────────
+    const projectBody = document.getElementById('projectBody');
+    const modulesBody = document.getElementById('modulesBody');
+    const tablesBody = document.getElementById('tablesBody');
+    const moduleCount = document.getElementById('moduleCount');
+    const tableCount = document.getElementById('tableCount');
+    const moduleFilter = document.getElementById('moduleFilter');
+    const paginationContainer = document.getElementById('paginationContainer');
+    const paginationControls = document.getElementById('paginationControls');
+
+    const analyzeForm = document.getElementById('analyzeForm');
+    const sourcePath = document.getElementById('sourcePath');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const btnLabel = document.getElementById('btnLabel');
+    const statusText = document.getElementById('statusText');
+    const errBox = document.getElementById('errBox');
+    const successBox = document.getElementById('successBox');
+    const pickFolderBtn = document.getElementById('pickFolderBtn');
+
+    const refreshProjectBtn = document.getElementById('refreshProjectBtn');
+    const refreshModulesBtn = document.getElementById('refreshModulesBtn');
+    const refreshTablesBtn = document.getElementById('refreshTablesBtn');
+
+    // ──────────────────────────────────────────────
+    //  State
+    // ──────────────────────────────────────────────
+    let currentPage = 1;
+    const pageSize = 10;
+    let totalModules = 0;
+    let totalPages = 0;
+    let currentFilter = '';
+
+    // ──────────────────────────────────────────────
+    //  Helpers
+    // ──────────────────────────────────────────────
+    function esc(s) {
+        return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;',
+            "'": '&#39;' }[c]));
+    }
+
+    function showError(msg) {
+        errBox.textContent = msg || 'Đã xảy ra lỗi.';
+        errBox.style.display = 'block';
+        successBox.style.display = 'none';
+    }
+
+    function showSuccess(msg) {
+        successBox.textContent = msg || 'Thành công.';
+        successBox.style.display = 'block';
+        errBox.style.display = 'none';
+    }
+
+    function hideMessages() {
+        errBox.style.display = 'none';
+        successBox.style.display = 'none';
+    }
+
+    function setLoading(loading) {
+        if (loading) {
+            analyzeBtn.disabled = true;
+            analyzeBtn.classList.add('loading');
+            btnLabel.textContent = 'Đang phân tích...';
+            statusText.textContent = '⏳ đang xử lý...';
+        } else {
+            analyzeBtn.disabled = false;
+            analyzeBtn.classList.remove('loading');
+            btnLabel.textContent = '▶ Phân tích';
+            statusText.textContent = '';
+        }
+    }
+
+    async function fetchJson(url, options = {}) {
+        const res = await fetch(url, options);
+        if (!res.ok) {
+            const text = await res.text();
+            let detail = text;
+            try {
+                const json = JSON.parse(text);
+                detail = json.detail || json.message || text;
+            } catch (_) { /* ignore */ }
+            throw new Error(`HTTP ${res.status}: ${detail}`);
+        }
+        return res.json();
+    }
+
+    // ──────────────────────────────────────────────
+    //  File picker (using showDirectoryPicker)
+    // ──────────────────────────────────────────────
+    async function pickFolder() {
+        try {
+            if (!('showDirectoryPicker' in window)) {
+                showError('Trình duyệt của bạn không hỗ trợ chọn thư mục. Vui lòng nhập đường dẫn thủ công.');
+                return;
+            }
+
+            const dirHandle = await window.showDirectoryPicker();
+            
+            // Get the actual path
+            let path = '';
+            
+            try {
+                // Try to get the full path
+                if (dirHandle.path) {
+                    path = dirHandle.path;
+                } else {
+                    // Fallback: use the name
+                    path = dirHandle.name;
+                }
+            } catch (_) {
+                path = dirHandle.name;
+            }
+            
+            sourcePath.value = path;
+
+            statusText.textContent = '✓ Đã chọn thư mục: ' + path;
+            statusText.style.color = 'var(--accent)';
+            setTimeout(() => {
+                statusText.textContent = '';
+                statusText.style.color = '';
+            }, 5000);
+
+            hideMessages();
+        } catch (err) {
+            if (err.name === 'AbortError' || err.message?.includes('abort')) {
+                return;
+            }
+            showError('Không thể chọn thư mục: ' + err.message);
+        }
+    }
+
+    pickFolderBtn.addEventListener('click', pickFolder);
+
+    // ──────────────────────────────────────────────
+    //  Render: Project
+    // ──────────────────────────────────────────────
+    async function loadProject() {
+        try {
+            const data = await fetchJson(`${API_BASE}/project`);
+            projectBody.innerHTML = `
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="num">${esc(data.name)}</div><div class="lbl">Tên project</div></div>
+                    <div class="stat-card"><div class="num" style="font-size:16px;">${esc(data.path)}</div><div class="lbl">Đường dẫn</div></div>
+                    <div class="stat-card"><div class="num">${esc(data.database)}</div><div class="lbl">CSDL</div></div>
+                    <div class="stat-card"><div class="num">${data.total_tables}</div><div class="lbl">Bảng</div></div>
+                    <div class="stat-card"><div class="num">${data.total_modules}</div><div class="lbl">Module</div></div>
+                </div>
+            `;
+            return data;
+        } catch (err) {
+            projectBody.innerHTML = `
+                <div class="empty">
+                    <div class="glyph">⚠️</div>
+                    Không thể tải thông tin project: ${esc(err.message)}
+                </div>
+            `;
+            throw err;
+        }
+    }
+
+    // ──────────────────────────────────────────────
+    //  Render: Modules (with pagination)
+    // ──────────────────────────────────────────────
+    function renderModules(modules, total) {
+        if (!modules || !modules.length) {
+            modulesBody.innerHTML = `<div class="empty"><div class="glyph">— · · —</div>Không có module nào.</div>`;
+            moduleCount.textContent = '0';
+            paginationContainer.style.display = 'none';
+            return;
+        }
+        
+        moduleCount.textContent = String(total || modules.length);
+        totalModules = total || modules.length;
+        totalPages = Math.ceil(totalModules / pageSize);
+
+        let html = `<div class="table-scroll"><table class="uptable">
+            <thead><tr>
+                <th>#</th>
+                <th>Module</th>
+                <th>File</th>
+                <th>Loại</th>
+                <th>Package</th>
+                <th>Methods</th>
+                <th>Tables</th>
+                <th>Dependencies</th>
+                <th>Related files</th>
+            </tr></thead><tbody>`;
+
+        const startIndex = (currentPage - 1) * pageSize;
+        modules.forEach((m, idx) => {
+            const methods = m.methods || [];
+            const tables = m.tables || [];
+            const deps = m.dependencies || [];
+            const related = m.related_files || [];
+
+            html += `<tr>
+                <td style="text-align:center;font-family:var(--mono);font-size:11px;color:var(--ink-soft);">${startIndex + idx + 1}</td>
+                <td><strong>${esc(m.module_name)}</strong>
+                    ${m.summary ? `<div style="font-size:11px;color:var(--ink-soft);">${esc(m.summary)}</div>` : ''}
+                    ${m.source_class ? `<div style="font-size:11px;color:var(--accent);">class ${esc(m.source_class)}</div>` : ''}
+                </td>
+                <td class="mono" style="font-size:11px;">${esc(m.file_name)}</td>
+                <td><span class="tag">${esc(m.module_type)}</span></td>
+                <td class="mono" style="font-size:11px;">${esc(m.package_name)}</td>
+                <td>
+                    ${methods.length ? methods.map(me =>
+                        `<div class="method-item">
+                            <span class="mname">${esc(me.name)}</span>
+                            ${me.endpoint ? `<span class="mdetail"> · ${esc(me.endpoint)}</span>` : ''}
+                            ${me.params && me.params.length ? `<span class="mdetail"> · params: ${me.params.join(', ')}</span>` : ''}
+                        </div>`
+                    ).join('') : '<span class="chip">—</span>'}
+                </td>
+                <td>${tables.length ? tables.map(t => `<span class="chip">${esc(t)}</span>`).join('') : '<span class="chip">—</span>'}</td>
+                <td>${deps.length ? deps.map(d => `<span class="chip">${esc(d)}</span>`).join('') : '<span class="chip">—</span>'}</td>
+                <td>${related.length ? related.map(r => `<span class="chip">${esc(r)}</span>`).join('') : '<span class="chip">—</span>'}</td>
+            </tr>`;
+        });
+
+        html += `</tbody></table></div>`;
+        modulesBody.innerHTML = html;
+        
+        // Render pagination
+        renderPagination();
+    }
+
+    function renderPagination() {
+        if (totalPages <= 1) {
+            paginationContainer.style.display = 'none';
+            return;
+        }
+        
+        paginationContainer.style.display = 'block';
+        let html = '<div class="pagination">';
+        
+        // Previous button
+        html += `<button onclick="goToPage(${currentPage - 1})" ${currentPage <= 1 ? 'disabled' : ''}>‹</button>`;
+        
+        // Page numbers
+        const maxVisible = 5;
+        let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+        let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+        
+        if (endPage - startPage < maxVisible - 1) {
+            startPage = Math.max(1, endPage - maxVisible + 1);
+        }
+        
+        if (startPage > 1) {
+            html += `<button onclick="goToPage(1)">1</button>`;
+            if (startPage > 2) html += `<span class="info">...</span>`;
+        }
+        
+        for (let i = startPage; i <= endPage; i++) {
+            html += `<button onclick="goToPage(${i})" class="${i === currentPage ? 'active' : ''}">${i}</button>`;
+        }
+        
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) html += `<span class="info">...</span>`;
+            html += `<button onclick="goToPage(${totalPages})">${totalPages}</button>`;
+        }
+        
+        // Next button
+        html += `<button onclick="goToPage(${currentPage + 1})" ${currentPage >= totalPages ? 'disabled' : ''}>›</button>`;
+        
+        // Info
+        html += `<span class="info">${(currentPage - 1) * pageSize + 1}-${Math.min(currentPage * pageSize, totalModules)} / ${totalModules}</span>`;
+        
+        html += '</div>';
+        paginationControls.innerHTML = html;
+    }
+
+    // ──────────────────────────────────────────────
+    //  Load modules with pagination
+    // ──────────────────────────────────────────────
+    async function loadModules(page = 1, filter = '') {
+        try {
+            currentPage = page;
+            currentFilter = filter;
+            
+            const params = new URLSearchParams({
+                page: page,
+                size: pageSize
+            });
+            if (filter) {
+                params.append('file_name', filter);
+            }
+            
+            const url = `${API_BASE}/modules?${params.toString()}`;
+            const response = await fetchJson(url);
+            
+            const modules = response.data || [];
+            const total = response.total || 0;
+            totalModules = total;
+            totalPages = response.total_pages || 0;
+            
+            renderModules(modules, total);
+            return response;
+        } catch (err) {
+            modulesBody.innerHTML =
+                `<div class="empty"><div class="glyph">⚠️</div>Lỗi tải modules: ${esc(err.message)}</div>`;
+            moduleCount.textContent = '0';
+            paginationContainer.style.display = 'none';
+            throw err;
+        }
+    }
+
+    // ──────────────────────────────────────────────
+    //  Page navigation
+    // ──────────────────────────────────────────────
+    window.goToPage = function(page) {
+        if (page < 1 || page > totalPages) return;
+        loadModules(page, currentFilter).catch(() => {});
+    };
+
+    // ──────────────────────────────────────────────
+    //  Render: Tables
+    // ──────────────────────────────────────────────
+    async function loadTables() {
+        try {
+            const data = await fetchJson(`${API_BASE}/database`);
+            if (!data || !data.length) {
+                tablesBody.innerHTML = `<div class="empty"><div class="glyph">— · · —</div>Không có bảng nào.</div>`;
+                tableCount.textContent = '0';
+                return;
+            }
+            tableCount.textContent = String(data.length);
+            let html = `<div class="tables-grid">`;
+            data.forEach(t => {
+                const cols = t.columns || [];
+                html += `
+                    <div class="table-card">
+                        <div class="tname">${esc(t.table)}</div>
+                        <div class="cols">
+                            ${cols.length ? cols.map(c => `<span class="chip">${esc(c)}</span>`).join('') : '<span class="chip">—</span>'}
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+            tablesBody.innerHTML = html;
+            return data;
+        } catch (err) {
+            tablesBody.innerHTML =
+                `<div class="empty"><div class="glyph">⚠️</div>Lỗi tải bảng: ${esc(err.message)}</div>`;
+            tableCount.textContent = '0';
+            throw err;
+        }
+    }
+
+    // ──────────────────────────────────────────────
+    //  Load all
+    // ──────────────────────────────────────────────
+    async function loadAll() {
+        hideMessages();
+        try {
+            await loadProject();
+        } catch (_) { /* ignore */ }
+        try {
+            await loadModules(1, moduleFilter.value.trim());
+        } catch (_) { /* ignore */ }
+        try {
+            await loadTables();
+        } catch (_) { /* ignore */ }
+    }
+
+    // ──────────────────────────────────────────────
+    //  Analyze source
+    // ──────────────────────────────────────────────
+    analyzeForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        hideMessages();
+        const path = sourcePath.value.trim();
+        if (!path) {
+            showError('Vui lòng nhập đường dẫn thư mục source code.');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const result = await fetchJson(`${API_BASE}/analyze-source`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ source_path: path }),
+            });
+            showSuccess(result.message || 'Phân tích thành công! Dữ liệu đã được lưu vào project-knowledge.json.');
+            statusText.textContent = '✓ hoàn tất';
+            // Reload all data
+            await loadAll();
+        } catch (err) {
+            showError(err.message || 'Phân tích thất bại.');
+            statusText.textContent = '✗ thất bại';
+        } finally {
+            setLoading(false);
+        }
+    });
+
+    // ──────────────────────────────────────────────
+    //  Refresh buttons
+    // ──────────────────────────────────────────────
+    refreshProjectBtn.addEventListener('click', async () => {
+        hideMessages();
+        try { await loadProject(); } catch (_) {}
+    });
+    refreshModulesBtn.addEventListener('click', async () => {
+        hideMessages();
+        try { await loadModules(1, moduleFilter.value.trim()); } catch (_) {}
+    });
+    refreshTablesBtn.addEventListener('click', async () => {
+        hideMessages();
+        try { await loadTables(); } catch (_) {}
+    });
+
+    // ──────────────────────────────────────────────
+    //  Filter modules
+    // ──────────────────────────────────────────────
+    let filterTimeout;
+    moduleFilter.addEventListener('input', () => {
+        clearTimeout(filterTimeout);
+        filterTimeout = setTimeout(() => {
+            const val = moduleFilter.value.trim();
+            loadModules(1, val).catch(() => {});
+        }, 300);
+    });
+
+    // ──────────────────────────────────────────────
+    //  Init
+    // ──────────────────────────────────────────────
+    loadAll();
+
+    // ──────────────────────────────────────────────
+    //  Keyboard shortcut: Ctrl+Enter to analyze
+    // ──────────────────────────────────────────────
+    document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            const active = document.activeElement;
+            if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) {
+                analyzeForm.dispatchEvent(new Event('submit'));
+            }
+        }
+    });
+</script>
+
+</body>
+</html>

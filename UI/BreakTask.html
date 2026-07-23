@@ -30,61 +30,130 @@
     margin:0;
     font-family:var(--sans);
     color:var(--ink);
-
     background:
         radial-gradient(circle at top right,#f5f9f6 0%,transparent 40%),
         radial-gradient(circle at bottom left,#eef5ef 0%,transparent 45%),
         linear-gradient(180deg,#fafbfc 0%,#eef2f3 100%);
-    }
-  header{
+    min-height:100vh;
+  }
+
+  /* ── Layout với sidebar dọc ── */
+  .app-layout{
+    display:flex;
+    min-height:100vh;
+  }
+
+  /* ── Sidebar dọc ── */
+  .sidebar{
+    width:240px;
+    min-height:100vh;
+    background:var(--panel);
+    border-right:1px solid var(--line);
+    display:flex;
+    flex-direction:column;
+    flex-shrink:0;
+    position:sticky;
+    top:0;
+    height:100vh;
+    overflow-y:auto;
+  }
+
+  .sidebar-header{
+    padding:20px 18px 12px;
+    border-bottom:1px solid var(--line);
     background:var(--accent);
     color:#f4f6f2;
-    padding:18px 32px;
+  }
+  .sidebar-header .brand{
     display:flex;
     align-items:baseline;
-    justify-content:space-between;
-    flex-wrap:wrap;
     gap:10px;
-    border-bottom:3px solid var(--green-deep);
+    flex-wrap:wrap;
   }
-  header .brand{display:flex; align-items:baseline; gap:12px;}
-  header .brand .no{font-family:var(--mono); font-size:12px; letter-spacing:.14em; opacity:.75;}
-  header h1{font-size:19px; margin:0; font-weight:700; letter-spacing:.01em;}
-  header .sub{font-size:12px; color:#dce7d8; font-family:var(--mono);}
+  .sidebar-header .brand .no{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.14em;
+    opacity:.75;
+  }
+  .sidebar-header h1{
+    font-size:15px;
+    margin:0;
+    font-weight:700;
+    letter-spacing:.01em;
+    line-height:1.3;
+  }
+  .sidebar-header .sub{
+    font-size:11px;
+    color:#dce7d8;
+    font-family:var(--mono);
+    margin-top:4px;
+  }
 
-  .tabbar{
-    background:var(--panel);
-    border-bottom:1px solid var(--line);
-    display:flex;
-    gap:2px;
-    padding:0 24px;
-    max-width:1240px;
-    margin:0 auto;
+  /* ── Tab buttons dọc ── */
+  .tabbar-vertical {
+    display: flex;
+    flex-direction: column;
+    padding: 12px 8px;
+    gap: 2px;
+    flex: 1;
   }
-  .tab-btn{
+
+  .tab-btn-vertical{
     font-family:var(--sans);
     font-size:13.5px;
     font-weight:600;
     color:var(--ink-soft);
     background:transparent;
     border:none;
-    border-bottom:3px solid transparent;
-    padding:14px 18px 11px;
+    border-left:3px solid transparent;
+    padding:12px 16px;
     cursor:pointer;
     display:flex;
     align-items:center;
-    gap:8px;
+    gap:12px;
+    text-align:left;
+    width:100%;
+    border-radius:2px;
+    transition:all .15s ease;
   }
-  .tab-btn .tab-no{font-family:var(--mono); font-size:11px; color:var(--line); font-weight:600;}
-  .tab-btn:hover{color:var(--accent);}
-  .tab-btn.active{color:var(--accent); border-bottom-color:var(--green-deep);}
-  .tab-btn.active .tab-no{color:var(--green-deep);}
+  .tab-btn-vertical .tab-no{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--line);
+    font-weight:600;
+    min-width:24px;
+  }
+  .tab-btn-vertical:hover{
+    color:var(--accent);
+    background:var(--accent-soft);
+  }
+  .tab-btn-vertical.active{
+    color:var(--accent);
+    border-left-color:var(--green-deep);
+    background:var(--accent-soft);
+  }
+  .tab-btn-vertical.active .tab-no{
+    color:var(--green-deep);
+  }
 
-  .tab-panel{display:none;}
-  .tab-panel.active{display:block;}
+  .sidebar-footer{
+    padding:12px 16px;
+    border-top:1px solid var(--line);
+    font-size:10.5px;
+    color:var(--ink-soft);
+    font-family:var(--mono);
+    text-align:center;
+  }
 
-  main{max-width:1240px; margin:0 auto; padding:28px 24px 60px;}
+  /* ── Main content ── */
+  .main-content{
+    flex:1;
+    padding:28px 32px 60px;
+    max-width:calc(100% - 240px);
+  }
 
+  /* ── Panel ── */
   .panel{
     background:var(--panel);
     border:1px solid var(--line);
@@ -93,17 +162,26 @@
   .panel + .panel{margin-top:22px;}
 
   .panel-head{
-    display:flex; align-items:center; justify-content:space-between;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
     padding:12px 18px;
     background:var(--accent-soft);
     border-bottom:1px solid var(--line);
+    flex-wrap:wrap;
+    gap:8px;
   }
   .panel-head h2{
-    font-size:13px; margin:0; text-transform:uppercase; letter-spacing:.09em;
-    color:var(--accent); font-weight:700;
+    font-size:13px;
+    margin:0;
+    text-transform:uppercase;
+    letter-spacing:.09em;
+    color:var(--accent);
+    font-weight:700;
   }
   .panel-body{padding:20px 22px;}
 
+  /* ── Form elements ── */
   label{display:block; font-size:12.5px; font-weight:600; color:var(--ink-soft); margin-bottom:6px;}
   .field{margin-bottom:16px;}
   .row2{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
@@ -157,7 +235,7 @@
   .hint-chip .x:hover{color:var(--red);}
   .hints-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
 
-  .actions{display:flex; align-items:center; gap:14px; margin-top:6px;}
+  .actions{display:flex; align-items:center; gap:14px; margin-top:6px; flex-wrap:wrap;}
   .submit-btn{
     background:var(--accent); color:#fff; border:none; padding:12px 22px;
     font-family:var(--sans); font-weight:700; font-size:14px; letter-spacing:.02em;
@@ -179,7 +257,7 @@
     padding:12px 14px; font-size:13px; font-family:var(--mono); margin-top:14px; display:none;
   }
 
-  /* results */
+  /* ── Results ── */
   .empty{
     padding:40px 22px; text-align:center; color:var(--ink-soft); font-size:13.5px;
   }
@@ -240,151 +318,210 @@
 
   .table-scroll{overflow-x:auto;}
 
-  footer{
-    max-width:1240px; margin:0 auto; padding:0 24px 40px; font-size:11.5px; color:var(--ink-soft); font-family:var(--mono);
+  /* ── Responsive ── */
+  @media (max-width:768px){
+    .app-layout{
+      flex-direction:column;
+    }
+    .sidebar{
+      width:100%;
+      min-height:auto;
+      height:auto;
+      position:relative;
+      border-right:none;
+      border-bottom:1px solid var(--line);
+    }
+    .sidebar-header{
+      padding:14px 16px 10px;
+    }
+    .sidebar-header h1{
+      font-size:14px;
+    }
+    .tabbar-vertical {
+      flex-direction: row;
+      padding: 8px 12px;
+      overflow-x: auto;
+      flex-wrap: nowrap;
+    }
+    .tab-btn-vertical{
+      border-left:none;
+      border-bottom:3px solid transparent;
+      padding:10px 14px;
+      white-space:nowrap;
+      flex-shrink:0;
+    }
+    .tab-btn-vertical.active{
+      border-left:none;
+      border-bottom-color:var(--green-deep);
+    }
+    .main-content{
+      max-width:100%;
+      padding:20px 16px 40px;
+    }
+    .row2{
+      grid-template-columns:1fr;
+    }
+    .hints-grid{
+      grid-template-columns:1fr;
+    }
+    .sidebar-footer{
+      display:none;
+    }
   }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="brand">
-    <span class="no">[3-002]</span>
-    <h1>Phân tích tác động &amp; chia nhỏ tác vụ</h1>
-  </div>
-  <div class="sub">POST /break-task</div>
-</header>
+<div class="app-layout">
 
-<nav class="tabbar">
-  <button class="tab-btn active" data-tab="analyze"><span class="tab-no">01</span> Phân tích tác động</button>
-  <button class="tab-btn" data-tab="history"><span class="tab-no">02</span> Lịch sử phân tích</button>
-  <button class="tab-btn" onclick="location.href='Analyzer.html'">
-    <span class="tab-no">03</span> Quản lý source
-  </button>
-</nav>
+  <!-- ═══ SIDEBAR DỌC ═══ -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <h1>Phân tích tác động &amp; chia nhỏ tác vụ</h1>
+      </div>
+    </div>
 
-<main>
+    <nav class="tabbar-vertical">
+      <a href="BreakTask.html" class="tab-btn-vertical">
+          <span class="tab-no">01</span> Phân tích tác động
+      </a>
+      <a href="MasterData.html" class="tab-btn-vertical">
+          <span class="tab-no">01</span> Quản lý master data
+      </a>
+      <a href="AnalyzerSourceCode.html" class="tab-btn-vertical active">
+          <span class="tab-no">03</span> Quản lý source
+      </a>
+    </nav>
 
-<div class="tab-panel active" id="tab-analyze">
+    <div class="sidebar-footer">
+      
+    </div>
+  </aside>
 
-  <section class="panel">
-    <div class="panel-head"><h2>Yêu cầu thay đổi (requirement)</h2></div>
-    <div class="panel-body">
-      <form id="reqForm">
+  <!-- ═══ MAIN CONTENT ═══ -->
+  <main class="main-content">
 
-        <div class="row2">
-          <div class="field">
-            <label for="title">Tiêu đề</label>
-            <input type="text" id="title" placeholder="VD: Thêm chức năng khóa tài khoản người dùng" required>
-          </div>
-          <div class="field">
-            <label for="change_type">Loại thay đổi</label>
-            <select id="change_type">
-              <option>Thêm mới</option>
-              <option>Sửa đổi</option>
-              <option>Xóa</option>
-              <option>Khác</option>
-            </select>
-          </div>
-        </div>
+    <div class="tab-panel active" id="tab-analyze">
 
-        <div class="field">
-          <label for="requirement">Mô tả yêu cầu</label>
-          <textarea id="requirement" placeholder="Mô tả chi tiết yêu cầu nghiệp vụ..." required></textarea>
-        </div>
+      <section class="panel">
+        <div class="panel-head"><h2>Yêu cầu thay đổi (requirement)</h2></div>
+        <div class="panel-body">
+          <form id="reqForm">
 
-        <div class="row2">
-          <div class="field">
-            <label for="current_behavior">Hành vi hiện tại</label>
-            <textarea id="current_behavior" placeholder="Hệ thống hiện đang hoạt động như thế nào..."></textarea>
-          </div>
-          <div class="field">
-            <label for="expected_behavior">Hành vi mong muốn</label>
-            <textarea id="expected_behavior" placeholder="Hệ thống cần hoạt động như thế nào sau thay đổi..."></textarea>
-          </div>
-        </div>
-
-        <div class="field">
-          <label>Quy tắc nghiệp vụ (business rules)</label>
-          <div class="rules-list" id="rulesList"></div>
-          <button type="button" class="add-rule" id="addRule">+ thêm quy tắc</button>
-        </div>
-
-        <div class="field">
-          <label style="text-transform:uppercase; letter-spacing:.08em; font-size:11.5px; color:var(--accent); margin-bottom:10px;">Gợi ý phạm vi ảnh hưởng (impact_hints)</label>
-          <div class="hints-grid">
-            <div class="field">
-              <label for="hint-modules-input">Module liên quan</label>
-              <div class="chip-input-wrap" id="hint-modules">
-                <input type="text" id="hint-modules-input" placeholder="Nhập rồi Enter...">
+            <div class="row2">
+              <div class="field">
+                <label for="title">Tiêu đề</label>
+                <input type="text" id="title" placeholder="VD: Thêm chức năng khóa tài khoản người dùng" required>
+              </div>
+              <div class="field">
+                <label for="change_type">Loại thay đổi</label>
+                <select id="change_type">
+                  <option>Thêm mới</option>
+                  <option>Sửa đổi</option>
+                  <option>Xóa</option>
+                  <option>Khác</option>
+                </select>
               </div>
             </div>
+
             <div class="field">
-              <label for="hint-tables-input">Bảng dữ liệu liên quan</label>
-              <div class="chip-input-wrap" id="hint-tables">
-                <input type="text" id="hint-tables-input" placeholder="VD: TB_CMCC_ENTR_ATTR_M">
+              <label for="requirement">Mô tả yêu cầu</label>
+              <textarea id="requirement" placeholder="Mô tả chi tiết yêu cầu nghiệp vụ..." required></textarea>
+            </div>
+
+            <div class="row2">
+              <div class="field">
+                <label for="current_behavior">Hành vi hiện tại</label>
+                <textarea id="current_behavior" placeholder="Hệ thống hiện đang hoạt động như thế nào..."></textarea>
+              </div>
+              <div class="field">
+                <label for="expected_behavior">Hành vi mong muốn</label>
+                <textarea id="expected_behavior" placeholder="Hệ thống cần hoạt động như thế nào sau thay đổi..."></textarea>
               </div>
             </div>
+
             <div class="field">
-              <label for="hint-columns-input">Cột dữ liệu liên quan</label>
-              <div class="chip-input-wrap" id="hint-columns">
-                <input type="text" id="hint-columns-input" placeholder="VD: USER_STATUS">
-              </div>
+              <label>Quy tắc nghiệp vụ (business rules)</label>
+              <div class="rules-list" id="rulesList"></div>
+              <button type="button" class="add-rule" id="addRule">+ thêm quy tắc</button>
             </div>
+
             <div class="field">
-              <label for="hint-keywords-input">Từ khóa kỹ thuật</label>
-              <div class="chip-input-wrap" id="hint-keywords">
-                <input type="text" id="hint-keywords-input" placeholder="VD: login, authentication">
+              <label style="text-transform:uppercase; letter-spacing:.08em; font-size:11.5px; color:var(--accent); margin-bottom:10px;">Gợi ý phạm vi ảnh hưởng (impact_hints)</label>
+              <div class="hints-grid">
+                <div class="field">
+                  <label for="hint-modules-input">Module liên quan</label>
+                  <div class="chip-input-wrap" id="hint-modules">
+                    <input type="text" id="hint-modules-input" placeholder="Nhập rồi Enter...">
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="hint-tables-input">Bảng dữ liệu liên quan</label>
+                  <div class="chip-input-wrap" id="hint-tables">
+                    <input type="text" id="hint-tables-input" placeholder="VD: TB_CMCC_ENTR_ATTR_M">
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="hint-columns-input">Cột dữ liệu liên quan</label>
+                  <div class="chip-input-wrap" id="hint-columns">
+                    <input type="text" id="hint-columns-input" placeholder="VD: USER_STATUS">
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="hint-keywords-input">Từ khóa kỹ thuật</label>
+                  <div class="chip-input-wrap" id="hint-keywords">
+                    <input type="text" id="hint-keywords-input" placeholder="VD: login, authentication">
+                  </div>
+                </div>
               </div>
+              <div class="hint">Nhập giá trị, nhấn Enter hoặc dấu phẩy để thêm — không bắt buộc.</div>
             </div>
-          </div>
-          <div class="hint">Nhập giá trị, nhấn Enter hoặc dấu phẩy để thêm — không bắt buộc.</div>
+
+            <div class="actions">
+              <button type="submit" class="submit-btn" id="submitBtn">
+                <span class="spinner"></span>
+                <span id="btnLabel">Phân tích tác động</span>
+              </button>
+              <span id="statusText" style="font-family:var(--mono); font-size:12px; color:var(--ink-soft);"></span>
+            </div>
+
+            <div class="err" id="errBox"></div>
+          </form>
         </div>
+      </section>
 
-        <div class="actions">
-          <button type="submit" class="submit-btn" id="submitBtn">
-            <span class="spinner"></span>
-            <span id="btnLabel">Phân tích tác động</span>
-          </button>
-          <span id="statusText" style="font-family:var(--mono); font-size:12px; color:var(--ink-soft);"></span>
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Module bị ảnh hưởng (impacted_modules)</h2>
+          <span class="mode-badge" id="modeBadge" style="display:none;"></span>
         </div>
+        <div class="panel-body" id="modulesBody">
+          <div class="empty"><div class="glyph">— · · —</div>Chưa có kết quả. Điền yêu cầu ở trên và bấm "Phân tích tác động".</div>
+        </div>
+      </section>
 
-        <div class="err" id="errBox"></div>
-      </form>
-    </div>
-  </section>
+      <section class="panel">
+        <div class="panel-head"><h2>Bảng chia nhỏ tiến trình (unit_processes)</h2></div>
+        <div class="panel-body" id="processBody">
+          <div class="empty"><div class="glyph">— · · —</div>Kết quả sẽ hiển thị dạng bảng LEVEL1–LEVEL4 sau khi phân tích xong.</div>
+        </div>
+      </section>
 
-  <section class="panel">
-    <div class="panel-head">
-      <h2>Module bị ảnh hưởng (impacted_modules)</h2>
-      <span class="mode-badge" id="modeBadge" style="display:none;"></span>
     </div>
-    <div class="panel-body" id="modulesBody">
-      <div class="empty"><div class="glyph">— · · —</div>Chưa có kết quả. Điền yêu cầu ở trên và bấm "Phân tích tác động".</div>
-    </div>
-  </section>
 
-  <section class="panel">
-    <div class="panel-head"><h2>Bảng chia nhỏ tiến trình (unit_processes)</h2></div>
-    <div class="panel-body" id="processBody">
-      <div class="empty"><div class="glyph">— · · —</div>Kết quả sẽ hiển thị dạng bảng LEVEL1–LEVEL4 sau khi phân tích xong.</div>
+    <div class="tab-panel" id="tab-history">
+      <section class="panel">
+        <div class="panel-head"><h2>Lịch sử phân tích</h2></div>
+        <div class="panel-body" id="historyBody">
+          <div class="empty"><div class="glyph">— · · —</div>Chưa có lịch sử phân tích nào trong phiên này.</div>
+        </div>
+      </section>
     </div>
-  </section>
+
+  </main>
 
 </div>
-
-<div class="tab-panel" id="tab-history">
-  <section class="panel">
-    <div class="panel-head"><h2>Lịch sử phân tích</h2></div>
-    <div class="panel-body">
-      <div class="empty"><div class="glyph">— · · —</div>Chưa có lịch sử phân tích nào trong phiên này.</div>
-    </div>
-  </section>
-</div>
-
-</main>
-
-<footer>output schema: impacted_modules[], unit_processes[], mode</footer>
 
 <script>
   const rulesList = document.getElementById('rulesList');
@@ -470,22 +607,28 @@
   const API_URL = 'http://localhost:8000/break-task';
   const CODE_MAP_PATH = 'project-knowledge.json';
 
-  // tab switching
-  const tabBtns = [...document.querySelectorAll('.tab-btn')];
+  // tab switching (vertical sidebar)
+  const tabBtns = [...document.querySelectorAll('.tab-btn-vertical')];
   const tabPanels = {
     analyze: document.getElementById('tab-analyze'),
     history: document.getElementById('tab-history'),
   };
+
   tabBtns.forEach(btn => {
     btn.addEventListener('click', () => {
+      // Nếu là link chuyển trang (có onclick), không xử lý ở đây
+      if (btn.getAttribute('onclick')) return;
+
       tabBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       Object.values(tabPanels).forEach(p => p.classList.remove('active'));
-      tabPanels[btn.dataset.tab].classList.add('active');
+      if (btn.dataset.tab && tabPanels[btn.dataset.tab]) {
+        tabPanels[btn.dataset.tab].classList.add('active');
+      }
     });
   });
 
-  const historyBody = document.querySelector('#tab-history .panel-body');
+  const historyBody = document.getElementById('historyBody');
   const historyEntries = [];
 
   function renderHistory(){
