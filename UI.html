@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phân tích tác động & chia nhỏ tác vụ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1a1d23;
+    --ink-soft:#5b6270;
+    --paper:#f6f7f5;
+    --panel:#ffffff;
+    --line:#dfe3de;
+    --green-head:#cfe3c3;
+    --green-head-strong:#a8c6a0;
+    --green-deep:#3f6b3a;
+    --accent:#2f5233;
+    --accent-soft:#e7efe4;
+    --red:#b23b3b;
+    --red-soft:#fbe9e9;
+    --amber:#a3760b;
+    --amber-soft:#faf1dc;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Be Vietnam Pro', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:var(--sans);
+    color:var(--ink);
+
+    background:
+        radial-gradient(circle at top right,#f5f9f6 0%,transparent 40%),
+        radial-gradient(circle at bottom left,#eef5ef 0%,transparent 45%),
+        linear-gradient(180deg,#fafbfc 0%,#eef2f3 100%);
+    }
+  header{
+    background:var(--accent);
+    color:#f4f6f2;
+    padding:18px 32px;
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:10px;
+    border-bottom:3px solid var(--green-deep);
+  }
+  header .brand{display:flex; align-items:baseline; gap:12px;}
+  header .brand .no{font-family:var(--mono); font-size:12px; letter-spacing:.14em; opacity:.75;}
+  header h1{font-size:19px; margin:0; font-weight:700; letter-spacing:.01em;}
+  header .sub{font-size:12px; color:#dce7d8; font-family:var(--mono);}
+
+  .tabbar{
+    background:var(--panel);
+    border-bottom:1px solid var(--line);
+    display:flex;
+    gap:2px;
+    padding:0 24px;
+    max-width:1240px;
+    margin:0 auto;
+  }
+  .tab-btn{
+    font-family:var(--sans);
+    font-size:13.5px;
+    font-weight:600;
+    color:var(--ink-soft);
+    background:transparent;
+    border:none;
+    border-bottom:3px solid transparent;
+    padding:14px 18px 11px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .tab-btn .tab-no{font-family:var(--mono); font-size:11px; color:var(--line); font-weight:600;}
+  .tab-btn:hover{color:var(--accent);}
+  .tab-btn.active{color:var(--accent); border-bottom-color:var(--green-deep);}
+  .tab-btn.active .tab-no{color:var(--green-deep);}
+
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  main{max-width:1240px; margin:0 auto; padding:28px 24px 60px;}
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    box-shadow:0 1px 0 rgba(0,0,0,.02);
+  }
+  .panel + .panel{margin-top:22px;}
+
+  .panel-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 18px;
+    background:var(--accent-soft);
+    border-bottom:1px solid var(--line);
+  }
+  .panel-head h2{
+    font-size:13px; margin:0; text-transform:uppercase; letter-spacing:.09em;
+    color:var(--accent); font-weight:700;
+  }
+  .panel-body{padding:20px 22px;}
+
+  label{display:block; font-size:12.5px; font-weight:600; color:var(--ink-soft); margin-bottom:6px;}
+  .field{margin-bottom:16px;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  input[type=text], textarea, select{
+    width:100%;
+    font-family:var(--sans);
+    font-size:14px;
+    color:var(--ink);
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:2px;
+    padding:9px 11px;
+    resize:vertical;
+  }
+  input[type=text]:focus, textarea:focus, select:focus{
+    outline:2px solid var(--green-deep);
+    outline-offset:1px;
+    border-color:var(--green-deep);
+  }
+  textarea{min-height:64px; line-height:1.5;}
+  .hint{font-size:11.5px; color:var(--ink-soft); margin-top:4px; font-family:var(--mono);}
+
+  .rules-list{display:flex; flex-direction:column; gap:8px;}
+  .rule-row{display:flex; gap:8px; align-items:center;}
+  .rule-row input{flex:1;}
+  .rule-no{font-family:var(--mono); font-size:12px; color:var(--ink-soft); width:20px; text-align:right;}
+  .icon-btn{
+    border:1px solid var(--line); background:#fff; color:var(--ink-soft);
+    width:30px; height:30px; border-radius:2px; cursor:pointer; font-size:16px; line-height:1;
+  }
+  .icon-btn:hover{border-color:var(--red); color:var(--red);}
+  .add-rule{
+    margin-top:10px; border:1px dashed var(--line); background:transparent; color:var(--accent);
+    font-family:var(--mono); font-size:12.5px; padding:8px 12px; cursor:pointer; border-radius:2px;
+  }
+  .add-rule:hover{background:var(--accent-soft);}
+
+  .chip-input-wrap{
+    display:flex; flex-wrap:wrap; gap:6px; align-items:center;
+    border:1px solid var(--line); background:#fff; padding:7px 8px; border-radius:2px;
+  }
+  .chip-input-wrap:focus-within{outline:2px solid var(--green-deep); outline-offset:1px; border-color:var(--green-deep);}
+  .chip-input-wrap input{
+    border:none; outline:none; flex:1; min-width:140px; font-size:13.5px; padding:3px 2px; font-family:var(--sans);
+  }
+  .hint-chip{
+    font-family:var(--mono); font-size:11.5px; background:var(--accent-soft); border:1px solid var(--green-head-strong);
+    color:var(--accent); padding:3px 6px 3px 8px; border-radius:2px; display:flex; align-items:center; gap:6px;
+  }
+  .hint-chip .x{cursor:pointer; color:var(--ink-soft); font-weight:700; line-height:1;}
+  .hint-chip .x:hover{color:var(--red);}
+  .hints-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+
+  .actions{display:flex; align-items:center; gap:14px; margin-top:6px;}
+  .submit-btn{
+    background:var(--accent); color:#fff; border:none; padding:12px 22px;
+    font-family:var(--sans); font-weight:700; font-size:14px; letter-spacing:.02em;
+    cursor:pointer; border-radius:2px; transition:background .15s ease;
+    display:flex; align-items:center; gap:10px;
+  }
+  .submit-btn:hover{background:var(--green-deep);}
+  .submit-btn:disabled{background:#9aa89a; cursor:not-allowed;}
+  .spinner{
+    width:14px; height:14px; border-radius:50%;
+    border:2px solid rgba(255,255,255,.4); border-top-color:#fff;
+    animation:spin .7s linear infinite; display:none;
+  }
+  .submit-btn.loading .spinner{display:inline-block;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .err{
+    background:var(--red-soft); border:1px solid var(--red); color:var(--red);
+    padding:12px 14px; font-size:13px; font-family:var(--mono); margin-top:14px; display:none;
+  }
+
+  /* results */
+  .empty{
+    padding:40px 22px; text-align:center; color:var(--ink-soft); font-size:13.5px;
+  }
+  .empty .glyph{font-family:var(--mono); font-size:24px; color:var(--line); margin-bottom:8px;}
+
+  .mode-badge{
+    font-family:var(--mono); font-size:11px; padding:3px 8px; border:1px solid var(--green-deep);
+    color:var(--green-deep); border-radius:2px; text-transform:uppercase; letter-spacing:.06em;
+  }
+
+  .modules-grid{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap:12px;
+  }
+  .module-card{
+    border:1px solid var(--line); padding:14px 16px; background:#fff;
+    border-left:4px solid var(--line);
+  }
+  .module-card.level-cao, .module-card[data-level="cao"]{border-left-color:var(--red);}
+  .module-card[data-level="trung"]{border-left-color:var(--amber);}
+  .module-card[data-level="thap"]{border-left-color:var(--green-deep);}
+  .module-card .m-top{display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:8px;}
+  .module-name{font-family:var(--mono); font-weight:600; font-size:13.5px; word-break:break-word;}
+  .impact-pill{
+    font-family:var(--mono); font-size:10.5px; padding:2px 7px; border-radius:2px; white-space:nowrap;
+    text-transform:uppercase; letter-spacing:.04em;
+  }
+  .impact-pill[data-level="cao"]{background:var(--red-soft); color:var(--red);}
+  .impact-pill[data-level="trung"]{background:var(--amber-soft); color:var(--amber);}
+  .impact-pill[data-level="thap"]{background:var(--accent-soft); color:var(--accent);}
+  .impact-pill[data-level="unk"]{background:#eee; color:#666;}
+  .module-reason{font-size:12.5px; color:var(--ink-soft); line-height:1.55;}
+
+  table.uptable{
+    width:100%; border-collapse:collapse; font-size:12.5px;
+  }
+  table.uptable th{
+    background:var(--green-head);
+    border:1px solid var(--green-head-strong);
+    padding:8px 10px; text-align:center; font-size:11px;
+    text-transform:uppercase; letter-spacing:.04em; color:#2d4227; font-weight:700;
+  }
+  table.uptable td{
+    border:1px solid var(--line); padding:9px 10px; vertical-align:top;
+  }
+  table.uptable tbody tr:nth-child(odd){background:#fbfcfa;}
+  table.uptable tbody tr:hover{background:var(--accent-soft);}
+  td.no{text-align:center; font-family:var(--mono); color:var(--ink-soft);}
+  td.mono{font-family:var(--mono); font-size:11.5px;}
+  .chips{display:flex; flex-wrap:wrap; gap:5px;}
+  .chip{
+    font-family:var(--mono); font-size:10.5px; background:#eef1ec; border:1px solid var(--line);
+    padding:2px 6px; border-radius:2px; color:var(--ink);
+  }
+  .tag{
+    font-family:var(--mono); font-size:10.5px; padding:2px 6px; border-radius:2px;
+    background:var(--accent-soft); color:var(--accent); white-space:nowrap;
+  }
+
+  .table-scroll{overflow-x:auto;}
+
+  footer{
+    max-width:1240px; margin:0 auto; padding:0 24px 40px; font-size:11.5px; color:var(--ink-soft); font-family:var(--mono);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="no">[3-002]</span>
+    <h1>Phân tích tác động &amp; chia nhỏ tác vụ</h1>
+  </div>
+  <div class="sub">POST /break-task</div>
+</header>
+
+<nav class="tabbar">
+  <button class="tab-btn active" data-tab="analyze"><span class="tab-no">01</span> Phân tích tác động</button>
+  <button class="tab-btn" data-tab="history"><span class="tab-no">02</span> Lịch sử phân tích</button>
+</nav>
+
+<main>
+
+<div class="tab-panel active" id="tab-analyze">
+
+  <section class="panel">
+    <div class="panel-head"><h2>Yêu cầu thay đổi (requirement)</h2></div>
+    <div class="panel-body">
+      <form id="reqForm">
+
+        <div class="row2">
+          <div class="field">
+            <label for="title">Tiêu đề</label>
+            <input type="text" id="title" placeholder="VD: Thêm chức năng khóa tài khoản người dùng" required>
+          </div>
+          <div class="field">
+            <label for="change_type">Loại thay đổi</label>
+            <select id="change_type">
+              <option>Thêm mới</option>
+              <option>Sửa đổi</option>
+              <option>Xóa</option>
+              <option>Khác</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="requirement">Mô tả yêu cầu</label>
+          <textarea id="requirement" placeholder="Mô tả chi tiết yêu cầu nghiệp vụ..." required></textarea>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="current_behavior">Hành vi hiện tại</label>
+            <textarea id="current_behavior" placeholder="Hệ thống hiện đang hoạt động như thế nào..."></textarea>
+          </div>
+          <div class="field">
+            <label for="expected_behavior">Hành vi mong muốn</label>
+            <textarea id="expected_behavior" placeholder="Hệ thống cần hoạt động như thế nào sau thay đổi..."></textarea>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Quy tắc nghiệp vụ (business rules)</label>
+          <div class="rules-list" id="rulesList"></div>
+          <button type="button" class="add-rule" id="addRule">+ thêm quy tắc</button>
+        </div>
+
+        <div class="field">
+          <label style="text-transform:uppercase; letter-spacing:.08em; font-size:11.5px; color:var(--accent); margin-bottom:10px;">Gợi ý phạm vi ảnh hưởng (impact_hints)</label>
+          <div class="hints-grid">
+            <div class="field">
+              <label for="hint-modules-input">Module liên quan</label>
+              <div class="chip-input-wrap" id="hint-modules">
+                <input type="text" id="hint-modules-input" placeholder="Nhập rồi Enter...">
+              </div>
+            </div>
+            <div class="field">
+              <label for="hint-tables-input">Bảng dữ liệu liên quan</label>
+              <div class="chip-input-wrap" id="hint-tables">
+                <input type="text" id="hint-tables-input" placeholder="VD: TB_CMCC_ENTR_ATTR_M">
+              </div>
+            </div>
+            <div class="field">
+              <label for="hint-columns-input">Cột dữ liệu liên quan</label>
+              <div class="chip-input-wrap" id="hint-columns">
+                <input type="text" id="hint-columns-input" placeholder="VD: USER_STATUS">
+              </div>
+            </div>
+            <div class="field">
+              <label for="hint-keywords-input">Từ khóa kỹ thuật</label>
+              <div class="chip-input-wrap" id="hint-keywords">
+                <input type="text" id="hint-keywords-input" placeholder="VD: login, authentication">
+              </div>
+            </div>
+          </div>
+          <div class="hint">Nhập giá trị, nhấn Enter hoặc dấu phẩy để thêm — không bắt buộc.</div>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="submit-btn" id="submitBtn">
+            <span class="spinner"></span>
+            <span id="btnLabel">Phân tích tác động</span>
+          </button>
+          <span id="statusText" style="font-family:var(--mono); font-size:12px; color:var(--ink-soft);"></span>
+        </div>
+
+        <div class="err" id="errBox"></div>
+      </form>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Module bị ảnh hưởng (impacted_modules)</h2>
+      <span class="mode-badge" id="modeBadge" style="display:none;"></span>
+    </div>
+    <div class="panel-body" id="modulesBody">
+      <div class="empty"><div class="glyph">— · · —</div>Chưa có kết quả. Điền yêu cầu ở trên và bấm "Phân tích tác động".</div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>Bảng chia nhỏ tiến trình (unit_processes)</h2></div>
+    <div class="panel-body" id="processBody">
+      <div class="empty"><div class="glyph">— · · —</div>Kết quả sẽ hiển thị dạng bảng LEVEL1–LEVEL4 sau khi phân tích xong.</div>
+    </div>
+  </section>
+
+</div>
+
+<div class="tab-panel" id="tab-history">
+  <section class="panel">
+    <div class="panel-head"><h2>Lịch sử phân tích</h2></div>
+    <div class="panel-body">
+      <div class="empty"><div class="glyph">— · · —</div>Chưa có lịch sử phân tích nào trong phiên này.</div>
+    </div>
+  </section>
+</div>
+
+</main>
+
+<footer>output schema: impacted_modules[], unit_processes[], mode</footer>
+
+<script>
+  const rulesList = document.getElementById('rulesList');
+  const defaultRules = [
+    "Chỉ người có quyền ADMIN mới được khóa hoặc mở khóa tài khoản.",
+    "Không được phép khóa chính tài khoản đang đăng nhập.",
+  ];
+
+  function addRuleRow(value=""){
+    const row = document.createElement('div');
+    row.className = 'rule-row';
+    row.innerHTML = `
+      <span class="rule-no"></span>
+      <input type="text" value="${value.replace(/"/g,'&quot;')}" placeholder="Nhập quy tắc nghiệp vụ...">
+      <button type="button" class="icon-btn" title="Xóa">&times;</button>
+    `;
+    row.querySelector('.icon-btn').addEventListener('click', () => {
+      row.remove();
+      renumberRules();
+    });
+    rulesList.appendChild(row);
+    renumberRules();
+  }
+
+  function renumberRules(){
+    [...rulesList.children].forEach((row, i) => {
+      row.querySelector('.rule-no').textContent = String(i+1).padStart(2,'0');
+    });
+  }
+
+  document.getElementById('addRule').addEventListener('click', () => addRuleRow(""));
+  defaultRules.forEach(addRuleRow);
+
+  function setupChipInput(wrapId){
+    const wrap = document.getElementById(wrapId);
+    const input = wrap.querySelector('input');
+    const values = [];
+
+    function renderChips(){
+      [...wrap.querySelectorAll('.hint-chip')].forEach(c => c.remove());
+      values.forEach((val, idx) => {
+        const chip = document.createElement('span');
+        chip.className = 'hint-chip';
+        chip.innerHTML = `<span></span><span class="x">&times;</span>`;
+        chip.querySelector('span').textContent = val;
+        chip.querySelector('.x').addEventListener('click', () => {
+          values.splice(idx, 1);
+          renderChips();
+        });
+        wrap.insertBefore(chip, input);
+      });
+    }
+
+    function commit(){
+      const val = input.value.trim();
+      if (val){
+        values.push(val);
+        input.value = '';
+        renderChips();
+      }
+    }
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ','){
+        e.preventDefault();
+        commit();
+      } else if (e.key === 'Backspace' && !input.value && values.length){
+        values.pop();
+        renderChips();
+      }
+    });
+    input.addEventListener('blur', commit);
+    wrap.addEventListener('click', () => input.focus());
+
+    return { getValues: () => values.slice(), commit };
+  }
+
+  const hintModules = setupChipInput('hint-modules');
+  const hintTables = setupChipInput('hint-tables');
+  const hintColumns = setupChipInput('hint-columns');
+  const hintKeywords = setupChipInput('hint-keywords');
+
+  const API_URL = 'http://localhost:8000/break-task';
+  const CODE_MAP_PATH = 'project-knowledge.json';
+
+  // tab switching
+  const tabBtns = [...document.querySelectorAll('.tab-btn')];
+  const tabPanels = {
+    analyze: document.getElementById('tab-analyze'),
+    history: document.getElementById('tab-history'),
+  };
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      Object.values(tabPanels).forEach(p => p.classList.remove('active'));
+      tabPanels[btn.dataset.tab].classList.add('active');
+    });
+  });
+
+  const historyBody = document.querySelector('#tab-history .panel-body');
+  const historyEntries = [];
+
+  function renderHistory(){
+    if (!historyEntries.length){
+      historyBody.innerHTML = '<div class="empty"><div class="glyph">— · · —</div>Chưa có lịch sử phân tích nào trong phiên này.</div>';
+      return;
+    }
+    historyBody.innerHTML = `<div class="modules-grid">${historyEntries.map(h => `
+      <div class="module-card" data-level="thap">
+        <div class="m-top">
+          <span class="module-name">${esc(h.title || '(không tiêu đề)')}</span>
+          <span class="tag">${esc(h.time)}</span>
+        </div>
+        <div class="module-reason">${esc(h.moduleCount)} module bị ảnh hưởng · ${esc(h.processCount)} unit process ${h.mode ? '· mode: ' + esc(h.mode) : ''}</div>
+      </div>
+    `).join('')}</div>`;
+  }
+
+  const form = document.getElementById('reqForm');
+  const submitBtn = document.getElementById('submitBtn');
+  const btnLabel = document.getElementById('btnLabel');
+  const statusText = document.getElementById('statusText');
+  const errBox = document.getElementById('errBox');
+  const modulesBody = document.getElementById('modulesBody');
+  const processBody = document.getElementById('processBody');
+  const modeBadge = document.getElementById('modeBadge');
+
+  function levelKey(text){
+    const t = (text||'').toLowerCase();
+    if (t.includes('cao') || t.includes('high')) return 'cao';
+    if (t.includes('trung') || t.includes('medium') || t.includes('vừa')) return 'trung';
+    if (t.includes('thấp') || t.includes('thap') || t.includes('low')) return 'thap';
+    return 'unk';
+  }
+
+  function esc(s){
+    return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function renderModules(mods){
+    if (!mods || !mods.length){
+      modulesBody.innerHTML = '<div class="empty"><div class="glyph">— · · —</div>Không có module nào được xác định là bị ảnh hưởng.</div>';
+      return;
+    }
+    modulesBody.innerHTML = `<div class="modules-grid">${mods.map(m => {
+      const lvl = levelKey(m.impact_level);
+      return `
+        <div class="module-card" data-level="${lvl}">
+          <div class="m-top">
+            <span class="module-name">${esc(m.module)}</span>
+            <span class="impact-pill" data-level="${lvl}">${esc(m.impact_level)}</span>
+          </div>
+          <div class="module-reason">${esc(m.reason)}</div>
+        </div>
+      `;
+    }).join('')}</div>`;
+  }
+
+  function renderProcesses(list){
+    if (!list || !list.length){
+      processBody.innerHTML = '<div class="empty"><div class="glyph">— · · —</div>Không có unit process nào được sinh ra.</div>';
+      return;
+    }
+    const rows = list.map(p => `
+      <tr>
+        <td class="no">${esc(p.no)}</td>
+        <td>${esc(p.level1)}</td>
+        <td>${esc(p.level2)}</td>
+        <td>${esc(p.level3)}</td>
+        <td>${esc(p.level4)}</td>
+        <td><span class="tag">${esc(p.dev_type || '—')}</span></td>
+        <td><span class="tag">${esc(p.process_type || '—')}</span></td>
+        <td><span class="tag">${esc(p.function_type || '—')}</span></td>
+        <td class="mono">${esc(p.module || '—')}</td>
+        <td>
+          <div class="chips">
+            ${(p.related_methods && p.related_methods.length)
+              ? p.related_methods.map(mm => `<span class="chip">${esc(mm)}</span>`).join('')
+              : '<span class="chip">—</span>'}
+          </div>
+        </td>
+      </tr>
+    `).join('');
+
+    processBody.innerHTML = `
+      <div class="table-scroll">
+        <table class="uptable">
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>LEVEL1<br>Business/system</th>
+              <th>LEVEL2<br>Main business</th>
+              <th>LEVEL3<br>Màn hình chi tiết</th>
+              <th>LEVEL4<br>Unit process</th>
+              <th>Dev type</th>
+              <th>Process type</th>
+              <th>Function type</th>
+              <th>Module</th>
+              <th>Related methods</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errBox.style.display = 'none';
+    errBox.textContent = '';
+
+    hintModules.commit();
+    hintTables.commit();
+    hintColumns.commit();
+    hintKeywords.commit();
+
+    const payload = {
+      requirement: {
+        title: document.getElementById('title').value.trim(),
+        requirement: document.getElementById('requirement').value.trim(),
+        change_type: document.getElementById('change_type').value,
+        current_behavior: document.getElementById('current_behavior').value.trim(),
+        expected_behavior: document.getElementById('expected_behavior').value.trim(),
+        business_rules: [...rulesList.querySelectorAll('input')]
+          .map(i => i.value.trim())
+          .filter(Boolean),
+        impact_hints: {
+          related_modules: hintModules.getValues(),
+          related_tables: hintTables.getValues(),
+          related_columns: hintColumns.getValues(),
+          technical_keywords: hintKeywords.getValues(),
+        },
+      },
+      code_map_path: CODE_MAP_PATH,
+    };
+
+    submitBtn.disabled = true;
+    submitBtn.classList.add('loading');
+    btnLabel.textContent = 'Đang phân tích...';
+    statusText.textContent = `→ ${API_URL}`;
+
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const raw = await res.text();
+      let data;
+      try { data = JSON.parse(raw); } catch { data = null; }
+
+      if (!res.ok){
+        const detail = (data && data.detail) ? data.detail : raw;
+        throw new Error(`HTTP ${res.status}: ${detail}`);
+      }
+      if (!data) throw new Error('Phản hồi không phải JSON hợp lệ.');
+
+      renderModules(data.impacted_modules);
+      renderProcesses(data.unit_processes);
+
+      if (data.mode){
+        modeBadge.textContent = data.mode;
+        modeBadge.style.display = 'inline-block';
+      } else {
+        modeBadge.style.display = 'none';
+      }
+
+      statusText.textContent = `✓ nhận ${((data.unit_processes||[]).length)} unit process, ${((data.impacted_modules||[]).length)} module`;
+
+      historyEntries.unshift({
+        title: payload.requirement.title,
+        time: new Date().toLocaleString('vi-VN'),
+        moduleCount: (data.impacted_modules||[]).length,
+        processCount: (data.unit_processes||[]).length,
+        mode: data.mode,
+      });
+      renderHistory();
+    } catch (err) {
+      errBox.textContent = err.message || String(err);
+      errBox.style.display = 'block';
+      statusText.textContent = '✗ thất bại';
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.classList.remove('loading');
+      btnLabel.textContent = 'Phân tích tác động';
+    }
+  });
+</script>
+
+</body>
+</html>

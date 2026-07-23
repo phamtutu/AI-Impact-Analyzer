@@ -34,10 +34,18 @@ Gọi bằng Postman:
 """
 
 import json
-from typing import Optional, Dict, Any
+import os
 
+from typing import Optional, Dict, Any
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from fastapi import HTTPException
+
+from analyzer import analyze_project  
+
+PROJECT_JSON = "project-knowledge.json"
 
 # Import đúng tên module là break_task (snake_case) - khớp với tên file break_task.py.
 # Nếu file thật của bạn tên là breakTask.py, đổi lại thành "from breakTask import ..."
@@ -50,12 +58,155 @@ app = FastAPI(
     description="Nhận requirement (structured) + code map (JSON từ analyzer.py) -> trả về impact analysis + task breakdown",
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],      # khi dev
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+class AnalyzeSourceRequest(BaseModel):
+    source_path: str
 
 class BreakTaskRequest(BaseModel):
     requirement: RequirementInput
     code_map: Optional[Dict[str, Any]] = None
     code_map_path: Optional[str] = None
 
+def load_project():
+    if not os.path.exists(PROJECT_JSON):
+        raise HTTPException(
+            status_code=404,
+            detail="Chưa có project-knowledge.json. Hãy phân tích source code trước."
+        )
+
+    with open(PROJECT_JSON, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+@app.get("/database")
+def get_database():
+
+    project = load_project()
+
+    return [
+        {
+            "table": table["name"],
+            "columns": [
+                column["name"]
+                for column in table["columns"]
+            ]
+        }
+        for table in project["database_schema"]["tables"]
+    ]
+
+from typing import Optional
+
+@app.get("/modules")
+def get_modules(file_name: Optional[str] = None):
+
+    project = load_project()
+
+    result = []
+
+    keyword = file_name.lower().strip() if file_name else None
+
+    for module in project["modules"]:
+
+        # LIKE %keyword%
+        if keyword and keyword not in module["file_name"].lower():
+            continue
+
+        table_details = []
+
+        for table in module.get("table_details", []):
+
+            table_details.append({
+                "table": table["name"],
+                "columns": [
+                    column["name"]
+                    for column in table.get("columns", [])
+                ]
+            })
+
+        result.append({
+
+            "file_name": module["file_name"],
+            "file_path": module["file_path"],
+            "package_name": module["package_name"],
+
+            "module_name": module["module_name"],
+            "module_type": module["module_type"],
+
+            "summary": module.get("summary", ""),
+            "source_class": module.get("source_class", ""),
+
+            "methods": [
+                {
+                    "name": method["name"],
+                    "endpoint": method.get("endpoint"),
+                    "params": method.get("params", []),
+                    "returns": method.get("returns")
+                }
+                for method in module.get("source_methods", [])
+            ],
+
+            "dependencies": module.get("dependencies", []),
+
+            "tables": module.get("tables", []),
+
+            "table_details": table_details,
+
+            "related_files": [
+                file.split("/")[-1]
+                for file in module.get("related_files", [])
+            ]
+        })
+
+    return result
+
+@app.get("/project")
+def get_project():
+
+    project = load_project()
+
+    return {
+        "name": project["project"]["name"],
+        "path": project["project"]["path"],
+        "database": project["database"]["db_type"],
+        "total_tables": len(project["database_schema"]["tables"]),
+        "total_modules": len(project["modules"])
+    }
+
+@app.post("/analyze-source")
+def analyze_source(req: AnalyzeSourceRequest):
+
+    if not os.path.exists(req.source_path):
+        raise HTTPException(
+            status_code=400,
+            detail="Không tìm thấy thư mục source code"
+        )
+
+    if not os.path.isdir(req.source_path):
+        raise HTTPException(
+            status_code=400,
+            detail="source_path phải là một thư mục"
+        )
+
+    try:
+        result = analyze_project(req.source_path)
+
+        return {
+            "status": "success",
+            "message": "Phân tích source code thành công",
+            "result": result
+        }
+
+    except Exception as ex:
+        raise HTTPException(
+            status_code=500,
+            detail=str(ex)
+        )
 
 @app.get("/")
 def health_check():

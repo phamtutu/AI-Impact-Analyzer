@@ -1,7 +1,7 @@
 {
   "project": {
     "name": "taskManager",
-    "path": "C:\\phamtu\\effortestimation\\effortestimation\\app\\analys-project\\taskManager"
+    "path": "D:\\test\\test\\taskManager"
   },
   "database": {
     "db_type": "PostgreSQL"
