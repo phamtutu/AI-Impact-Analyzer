@@ -1,16 +1,26 @@
 // ──────────────────────────────────────────────
-//  Effort Manager - Quản lý Effort (Nỗ lực)
+//  Effort Manager - Quản lý Effort (Development Effort)
 // ──────────────────────────────────────────────
 
 // ─── State ───
 let effortData = [
-    { id: 1, name: 'Nhỏ', hours: 4, days: 0.5, description: 'Công việc nhỏ, hoàn thành trong nửa ngày' },
-    { id: 2, name: 'Vừa', hours: 16, days: 2, description: 'Công việc vừa, hoàn thành trong 2 ngày' },
-    { id: 3, name: 'Lớn', hours: 40, days: 5, description: 'Công việc lớn, hoàn thành trong 1 tuần' },
-    { id: 4, name: 'Rất lớn', hours: 80, days: 10, description: 'Công việc rất lớn, hoàn thành trong 2 tuần' },
+    // Web - Online_Web - New
+    { id: 1, dev_type: 'WEB', dev_sub_type: 'Online_Web', change_type: '신규 (New)', complexity: 'C0', effort: 1.1 },
+    { id: 2, dev_type: 'WEB', dev_sub_type: 'Online_Web', change_type: '신규 (New)', complexity: 'C1', effort: 1.8 },
+    { id: 3, dev_type: 'WEB', dev_sub_type: 'Online_Web', change_type: '신규 (New)', complexity: 'C2', effort: 3.2 },
+    { id: 4, dev_type: 'WEB', dev_sub_type: 'Online_Web', change_type: '신규 (New)', complexity: 'C3', effort: 5.0 },
+    { id: 5, dev_type: 'WEB', dev_sub_type: 'Online_Web', change_type: '신규 (New)', complexity: 'C4', effort: 7.4 },
+    { id: 6, dev_type: 'WEB', dev_sub_type: 'Online_Web', change_type: '신규 (New)', complexity: 'C5', effort: 11.9 },
+    // Web - Online_Web - Change
+    { id: 7, dev_type: 'WEB', dev_sub_type: 'Online_Web', change_type: '변경 (Change)', complexity: 'C0', effort: 0.6 },
+    { id: 8, dev_type: 'WEB', dev_sub_type: 'Online_Web', change_type: '변경 (Change)', complexity: 'C1', effort: 1.0 },
+    { id: 9, dev_type: 'WEB', dev_sub_type: 'Online_Web', change_type: '변경 (Change)', complexity: 'C2', effort: 2.3 },
+    { id: 10, dev_type: 'WEB', dev_sub_type: 'Online_Web', change_type: '변경 (Change)', complexity: 'C3', effort: 3.6 },
+    { id: 11, dev_type: 'WEB', dev_sub_type: 'Online_Web', change_type: '변경 (Change)', complexity: 'C4', effort: 5.3 },
+    { id: 12, dev_type: 'WEB', dev_sub_type: 'Online_Web', change_type: '변경 (Change)', complexity: 'C5', effort: 8.9 },
 ];
 
-let nextEffortId = 5;
+let nextEffortId = 13;
 
 // ─── DOM refs ───
 const effortBody = document.getElementById('effortBody');
@@ -32,22 +42,26 @@ function renderEffort() {
 
     let html = `<div class="table-scroll"><table class="data-table">
         <thead><tr>
-            <th>ID</th>
-            <th>Tên</th>
-            <th>Giờ</th>
-            <th>Ngày</th>
-            <th>Mô tả</th>
-            <th>Thao tác</th>
+            <th style="width:50px;">ID</th>
+            <th style="min-width:80px;">Dev Type</th>
+            <th style="min-width:120px;">Dev Sub Type</th>
+            <th style="min-width:120px;">Change Type</th>
+            <th style="width:70px;">Complexity</th>
+            <th style="width:100px;">Effort</th>
+            <th style="width:120px;">Thao tác</th>
         </tr></thead><tbody>`;
 
     effortData.forEach(item => {
-        const tagClass = item.hours <= 4 ? 'tag-blue' : item.hours <= 16 ? 'tag-amber' : 'tag-red';
+        const colorClass = item.complexity === 'C0' || item.complexity === 'C1' ? 'tag-blue' :
+                          item.complexity === 'C2' || item.complexity === 'C3' ? 'tag-amber' : 'tag-red';
+        const changeClass = item.change_type.includes('신규') ? 'tag-blue' : 'tag-amber';
         html += `<tr>
-            <td>${item.id}</td>
-            <td><strong>${esc(item.name)}</strong></td>
-            <td><span class="tag ${tagClass}">${item.hours}h</span></td>
-            <td>${item.days} ngày</td>
-            <td>${esc(item.description)}</td>
+            <td style="text-align:center;">${item.id}</td>
+            <td><span class="tag">${esc(item.dev_type)}</span></td>
+            <td>${esc(item.dev_sub_type)}</td>
+            <td><span class="tag ${changeClass}">${esc(item.change_type)}</span></td>
+            <td style="text-align:center;"><span class="tag ${colorClass}">${esc(item.complexity)}</span></td>
+            <td style="text-align:center;font-weight:700;font-family:var(--mono);font-size:14px;">${item.effort}</td>
             <td>
                 <div class="actions-cell">
                     <button class="btn btn-secondary btn-sm" onclick="window.editEffort(${item.id})">✏️</button>
@@ -63,18 +77,19 @@ function renderEffort() {
 
 // ─── CRUD Operations ───
 function addEffort() {
-    const name = prompt('Nhập tên effort:');
-    if (!name) return;
-    const hours = parseFloat(prompt('Nhập số giờ:') || '0');
-    const days = parseFloat(prompt('Nhập số ngày:') || '0');
-    const description = prompt('Nhập mô tả:') || '';
+    const dev_type = prompt('Nhập Development Type (WEB, APP, ...):') || 'WEB';
+    const dev_sub_type = prompt('Nhập Development Sub Type (Online_Web, Mobile, ...):') || 'Online_Web';
+    const change_type = prompt('Nhập Change Type (신규 (New), 변경 (Change)):') || '신규 (New)';
+    const complexity = prompt('Nhập Complexity (C0, C1, C2, C3, C4, C5):') || 'C0';
+    const effort = parseFloat(prompt('Nhập Effort (số ngày công):') || '0');
 
     effortData.push({
         id: nextEffortId++,
-        name,
-        hours,
-        days,
-        description
+        dev_type,
+        dev_sub_type,
+        change_type,
+        complexity,
+        effort
     });
     renderEffort();
 }
@@ -83,16 +98,17 @@ function editEffort(id) {
     const item = effortData.find(e => e.id === id);
     if (!item) return;
 
-    const name = prompt('Tên effort:', item.name);
-    if (name === null) return;
-    const hours = parseFloat(prompt('Số giờ:', item.hours) || item.hours);
-    const days = parseFloat(prompt('Số ngày:', item.days) || item.days);
-    const description = prompt('Mô tả:', item.description) || item.description;
+    const dev_type = prompt('Development Type:', item.dev_type) || item.dev_type;
+    const dev_sub_type = prompt('Development Sub Type:', item.dev_sub_type) || item.dev_sub_type;
+    const change_type = prompt('Change Type:', item.change_type) || item.change_type;
+    const complexity = prompt('Complexity:', item.complexity) || item.complexity;
+    const effort = parseFloat(prompt('Effort:', item.effort) || item.effort);
 
-    item.name = name || item.name;
-    item.hours = hours;
-    item.days = days;
-    item.description = description;
+    item.dev_type = dev_type;
+    item.dev_sub_type = dev_sub_type;
+    item.change_type = change_type;
+    item.complexity = complexity;
+    item.effort = effort;
     renderEffort();
 }
 

@@ -1,15 +1,47 @@
 // ──────────────────────────────────────────────
-//  Complexity Manager - Quản lý độ phức tạp
+//  Complexity Manager - Quản lý độ phức tạp (C1-C5)
 // ──────────────────────────────────────────────
 
 // ─── State ───
 let complexityData = [
-    { id: 1, name: 'Thấp', level: 1, color: '#4caf50', description: 'Thay đổi đơn giản, ít ảnh hưởng' },
-    { id: 2, name: 'Trung bình', level: 2, color: '#ff9800', description: 'Thay đổi vừa, ảnh hưởng một số module' },
-    { id: 3, name: 'Cao', level: 3, color: '#f44336', description: 'Thay đổi lớn, ảnh hưởng nhiều module' },
+    { 
+        id: 1, 
+        level: 'C1', 
+        name: 'Rất thấp',
+        criteria: 'Số lượng column ≤ 10, Business logic ≤ 5, UI đơn giản',
+        description: 'Thay đổi đơn giản, ít ảnh hưởng, dễ thực hiện'
+    },
+    { 
+        id: 2, 
+        level: 'C2', 
+        name: 'Thấp',
+        criteria: 'Số lượng column 10-15, Business logic 6-10, UI trung bình',
+        description: 'Thay đổi tương đối đơn giản, ảnh hưởng ít module'
+    },
+    { 
+        id: 3, 
+        level: 'C3', 
+        name: 'Trung bình',
+        criteria: 'Số lượng column 15-20, Business logic 11-15, UI phức tạp',
+        description: 'Thay đổi vừa, ảnh hưởng một số module'
+    },
+    { 
+        id: 4, 
+        level: 'C4', 
+        name: 'Cao',
+        criteria: 'Số lượng column 20-25, Business logic > 15, UI rất phức tạp',
+        description: 'Thay đổi lớn, ảnh hưởng nhiều module'
+    },
+    { 
+        id: 5, 
+        level: 'C5', 
+        name: 'Rất cao',
+        criteria: 'Số lượng column > 25, Business logic > 20, UI đặc biệt phức tạp',
+        description: 'Thay đổi rất lớn, ảnh hưởng toàn hệ thống, cần thảo luận kỹ'
+    },
 ];
 
-let nextComplexityId = 4;
+let nextComplexityId = 6;
 
 // ─── DOM refs ───
 const complexityBody = document.getElementById('complexityBody');
@@ -31,21 +63,22 @@ function renderComplexity() {
 
     let html = `<div class="table-scroll"><table class="data-table">
         <thead><tr>
-            <th>ID</th>
-            <th>Tên</th>
-            <th>Level</th>
-            <th>Màu</th>
-            <th>Mô tả</th>
-            <th>Thao tác</th>
+            <th style="width:60px;">Level</th>
+            <th style="min-width:120px;">Tên</th>
+            <th style="min-width:250px;">Tiêu chí đánh giá</th>
+            <th style="min-width:200px;">Mô tả</th>
+            <th style="width:120px;">Thao tác</th>
         </tr></thead><tbody>`;
 
     complexityData.forEach(item => {
-        const colorClass = item.level === 1 ? 'tag-blue' : item.level === 2 ? 'tag-amber' : 'tag-red';
+        const colorClass = item.level === 'C1' ? 'tag-blue' : 
+                          item.level === 'C2' ? 'tag-blue' :
+                          item.level === 'C3' ? 'tag-amber' : 
+                          item.level === 'C4' ? 'tag-red' : 'tag-red';
         html += `<tr>
-            <td>${item.id}</td>
+            <td style="text-align:center;"><span class="tag ${colorClass}" style="font-size:14px;font-weight:700;">${esc(item.level)}</span></td>
             <td><strong>${esc(item.name)}</strong></td>
-            <td><span class="tag ${colorClass}">Level ${item.level}</span></td>
-            <td><span style="display:inline-block;width:20px;height:20px;background:${item.color};border-radius:2px;border:1px solid #ddd;"></span></td>
+            <td style="font-size:11.5px;">${esc(item.criteria)}</td>
             <td>${esc(item.description)}</td>
             <td>
                 <div class="actions-cell">
@@ -62,17 +95,17 @@ function renderComplexity() {
 
 // ─── CRUD Operations ───
 function addComplexity() {
-    const name = prompt('Nhập tên độ phức tạp:');
-    if (!name) return;
-    const level = parseInt(prompt('Nhập level (1, 2, 3, ...):') || '1');
-    const color = prompt('Nhập màu (hex, VD: #4caf50):') || '#4caf50';
+    const level = prompt('Nhập level (C1, C2, C3, C4, C5):');
+    if (!level) return;
+    const name = prompt('Nhập tên độ phức tạp:') || '';
+    const criteria = prompt('Nhập tiêu chí đánh giá:') || '';
     const description = prompt('Nhập mô tả:') || '';
 
     complexityData.push({
         id: nextComplexityId++,
-        name,
         level,
-        color,
+        name,
+        criteria,
         description
     });
     renderComplexity();
@@ -82,15 +115,15 @@ function editComplexity(id) {
     const item = complexityData.find(c => c.id === id);
     if (!item) return;
 
-    const name = prompt('Tên độ phức tạp:', item.name);
-    if (name === null) return;
-    const level = parseInt(prompt('Level:', item.level) || item.level);
-    const color = prompt('Màu:', item.color) || item.color;
+    const level = prompt('Level:', item.level);
+    if (level === null) return;
+    const name = prompt('Tên:', item.name) || item.name;
+    const criteria = prompt('Tiêu chí:', item.criteria) || item.criteria;
     const description = prompt('Mô tả:', item.description) || item.description;
 
-    item.name = name || item.name;
-    item.level = level;
-    item.color = color;
+    item.level = level || item.level;
+    item.name = name;
+    item.criteria = criteria;
     item.description = description;
     renderComplexity();
 }

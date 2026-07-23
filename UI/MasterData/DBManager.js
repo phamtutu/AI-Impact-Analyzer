@@ -4,12 +4,37 @@
 
 // ─── State ───
 let dbData = [
-    { id: 1, name: 'MySQL Production', type: 'MySQL', host: 'localhost', port: 3306, database: 'task_management' },
-    { id: 2, name: 'PostgreSQL Dev', type: 'PostgreSQL', host: 'dev-db.local', port: 5432, database: 'dev_db' },
-    { id: 3, name: 'MongoDB Analytics', type: 'MongoDB', host: 'analytics.mongo', port: 27017, database: 'analytics' },
+    { 
+        id: 1, 
+        table_name: 'TB_USER', 
+        schema: 'PUBLIC', 
+        columns: 'USER_ID, USER_NAME, EMAIL, STATUS, CREATED_AT', 
+        description: 'Bảng quản lý thông tin người dùng' 
+    },
+    { 
+        id: 2, 
+        table_name: 'TB_ORDER', 
+        schema: 'PUBLIC', 
+        columns: 'ORDER_ID, USER_ID, ORDER_DATE, TOTAL_AMOUNT, STATUS', 
+        description: 'Bảng quản lý đơn hàng' 
+    },
+    { 
+        id: 3, 
+        table_name: 'TB_PRODUCT', 
+        schema: 'PUBLIC', 
+        columns: 'PRODUCT_ID, PRODUCT_NAME, CATEGORY, PRICE, STOCK_QUANTITY', 
+        description: 'Bảng quản lý sản phẩm' 
+    },
+    { 
+        id: 4, 
+        table_name: 'TB_CMCC_ENTR_ATTR_M', 
+        schema: 'CMCC', 
+        columns: 'ENTR_ID, ATTR_ID, ATTR_VALUE, STATUS, REG_DT', 
+        description: 'Bảng quản lý thuộc tính đầu vào CMCC' 
+    },
 ];
 
-let nextDbId = 4;
+let nextDbId = 5;
 
 // ─── DOM refs ───
 const dbBody = document.getElementById('dbBody');
@@ -31,23 +56,21 @@ function renderDB() {
 
     let html = `<div class="table-scroll"><table class="data-table">
         <thead><tr>
-            <th>ID</th>
-            <th>Tên</th>
-            <th>Loại</th>
-            <th>Host</th>
-            <th>Port</th>
-            <th>Database</th>
-            <th>Thao tác</th>
+            <th style="width:50px;">ID</th>
+            <th style="min-width:150px;">Tên bảng</th>
+            <th style="min-width:120px;">Schema</th>
+            <th style="min-width:250px;">Các cột</th>
+            <th style="min-width:200px;">Mô tả</th>
+            <th style="width:120px;">Thao tác</th>
         </tr></thead><tbody>`;
 
     dbData.forEach(item => {
         html += `<tr>
-            <td>${item.id}</td>
-            <td><strong>${esc(item.name)}</strong></td>
-            <td><span class="tag tag-blue">${esc(item.type)}</span></td>
-            <td class="mono" style="font-family:var(--mono);font-size:11.5px;">${esc(item.host)}</td>
-            <td>${item.port}</td>
-            <td class="mono" style="font-family:var(--mono);font-size:11.5px;">${esc(item.database)}</td>
+            <td style="text-align:center;">${item.id}</td>
+            <td><strong style="font-family:var(--mono);font-size:12px;">${esc(item.table_name)}</strong></td>
+            <td><span class="tag tag-blue">${esc(item.schema)}</span></td>
+            <td style="font-family:var(--mono);font-size:11px;">${esc(item.columns)}</td>
+            <td>${esc(item.description)}</td>
             <td>
                 <div class="actions-cell">
                     <button class="btn btn-secondary btn-sm" onclick="window.editDB(${item.id})">✏️</button>
@@ -63,20 +86,18 @@ function renderDB() {
 
 // ─── CRUD Operations ───
 function addDB() {
-    const name = prompt('Nhập tên database:');
-    if (!name) return;
-    const type = prompt('Nhập loại database (MySQL, PostgreSQL, MongoDB, ...):') || 'MySQL';
-    const host = prompt('Nhập host:') || 'localhost';
-    const port = parseInt(prompt('Nhập port:') || '3306');
-    const database = prompt('Nhập tên database:') || 'db';
+    const table_name = prompt('Nhập tên bảng:');
+    if (!table_name) return;
+    const schema = prompt('Nhập schema:') || 'PUBLIC';
+    const columns = prompt('Nhập danh sách cột (cách nhau bởi dấu phẩy):') || '';
+    const description = prompt('Nhập mô tả bảng:') || '';
 
     dbData.push({
         id: nextDbId++,
-        name,
-        type,
-        host,
-        port,
-        database
+        table_name,
+        schema,
+        columns,
+        description
     });
     renderDB();
 }
@@ -85,23 +106,21 @@ function editDB(id) {
     const item = dbData.find(d => d.id === id);
     if (!item) return;
 
-    const name = prompt('Tên database:', item.name);
-    if (name === null) return;
-    const type = prompt('Loại database:', item.type) || item.type;
-    const host = prompt('Host:', item.host) || item.host;
-    const port = parseInt(prompt('Port:', item.port) || item.port);
-    const database = prompt('Database:', item.database) || item.database;
+    const table_name = prompt('Tên bảng:', item.table_name);
+    if (table_name === null) return;
+    const schema = prompt('Schema:', item.schema) || item.schema;
+    const columns = prompt('Các cột:', item.columns) || item.columns;
+    const description = prompt('Mô tả:', item.description) || item.description;
 
-    item.name = name || item.name;
-    item.type = type;
-    item.host = host;
-    item.port = port;
-    item.database = database;
+    item.table_name = table_name || item.table_name;
+    item.schema = schema;
+    item.columns = columns;
+    item.description = description;
     renderDB();
 }
 
 function deleteDB(id) {
-    if (!confirm('Bạn có chắc chắn muốn xóa database này?')) return;
+    if (!confirm('Bạn có chắc chắn muốn xóa bảng này?')) return;
     dbData = dbData.filter(d => d.id !== id);
     renderDB();
 }

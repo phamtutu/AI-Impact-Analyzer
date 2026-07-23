@@ -121,7 +121,7 @@
             width: 100%;
             border-radius: 2px;
             transition: all .15s ease;
-            text-decoration: none;
+            text-decoration: none !important;
         }
         .tab-btn-vertical .tab-no {
             font-family: var(--mono);
@@ -133,6 +133,7 @@
         .tab-btn-vertical:hover {
             color: var(--accent);
             background: var(--accent-soft);
+            text-decoration: none !important;
         }
         .tab-btn-vertical.active {
             color: var(--accent);
@@ -254,45 +255,7 @@
             display: block;
         }
 
-        /* ── form ── */
-        label {
-            display: block;
-            font-size: 12.5px;
-            font-weight: 600;
-            color: var(--ink-soft);
-            margin-bottom: 5px;
-        }
-        .field {
-            margin-bottom: 16px;
-        }
-        .row2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-        input[type="text"],
-        input[type="number"],
-        textarea,
-        select {
-            width: 100%;
-            font-family: var(--sans);
-            font-size: 14px;
-            color: var(--ink);
-            background: #fff;
-            border: 1px solid var(--line);
-            border-radius: 2px;
-            padding: 9px 11px;
-            resize: vertical;
-        }
-        input[type="text"]:focus,
-        input[type="number"]:focus,
-        textarea:focus,
-        select:focus {
-            outline: 2px solid var(--green-deep);
-            outline-offset: 1px;
-            border-color: var(--green-deep);
-        }
-
+        /* ── buttons ── */
         .btn {
             padding: 8px 16px;
             font-family: var(--sans);
@@ -335,11 +298,9 @@
             font-size: 11px;
         }
 
-        .actions {
+        .actions-cell {
             display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-top: 6px;
+            gap: 4px;
             flex-wrap: wrap;
         }
 
@@ -375,11 +336,6 @@
         table.data-table tbody tr:hover {
             background: var(--accent-soft);
         }
-        table.data-table td .actions-cell {
-            display: flex;
-            gap: 4px;
-            flex-wrap: wrap;
-        }
 
         .empty {
             padding: 32px 16px;
@@ -394,17 +350,6 @@
             margin-bottom: 6px;
         }
 
-        .chip {
-            font-family: var(--mono);
-            font-size: 10.5px;
-            background: #eef1ec;
-            border: 1px solid var(--line);
-            padding: 2px 6px;
-            border-radius: 2px;
-            color: var(--ink);
-            display: inline-block;
-            margin: 1px 2px;
-        }
         .tag {
             font-family: var(--mono);
             font-size: 10.5px;
@@ -459,6 +404,7 @@
                 padding: 10px 14px;
                 white-space: nowrap;
                 flex-shrink: 0;
+                text-decoration: none !important;
             }
             .tab-btn-vertical.active {
                 border-left: none;
@@ -467,9 +413,6 @@
             .main-content {
                 max-width: 100%;
                 padding: 20px 16px 40px;
-            }
-            .row2 {
-                grid-template-columns: 1fr;
             }
             .master-tabbar {
                 overflow-x: auto;
@@ -502,16 +445,16 @@
             <a href="BreakTask.html" class="tab-btn-vertical">
                 <span class="tab-no">01</span> Phân tích tác động
             </a>
-            <a href="MasterData.html" class="tab-btn-vertical">
-                <span class="tab-no">01</span> Quản lý master data
+            <a href="MasterData.html" class="tab-btn-vertical active">
+                <span class="tab-no">02</span> Quản lý master data
             </a>
-            <a href="AnalyzerSourceCode.html" class="tab-btn-vertical active">
+            <a href="AnalyzerSourceCode.html" class="tab-btn-vertical">
                 <span class="tab-no">03</span> Quản lý source
             </a>
         </nav>
 
         <div class="sidebar-footer">
-            
+           
         </div>
     </aside>
 
@@ -538,7 +481,7 @@
         <div class="master-panel active" id="panel-db">
             <section class="panel">
                 <div class="panel-head">
-                    <h2>📋 Danh sách Database</h2>
+                    <h2>📋 Danh sách Database Tables</h2>
                     <button class="btn btn-primary" id="addDbBtn">+ Thêm mới</button>
                 </div>
                 <div class="panel-body" id="dbBody">
@@ -551,7 +494,7 @@
         <div class="master-panel" id="panel-complexity">
             <section class="panel">
                 <div class="panel-head">
-                    <h2>📊 Độ phức tạp (Complexity)</h2>
+                    <h2>📊 Độ phức tạp (Complexity C1-C5)</h2>
                     <button class="btn btn-primary" id="addComplexityBtn">+ Thêm mới</button>
                 </div>
                 <div class="panel-body" id="complexityBody">
@@ -564,7 +507,7 @@
         <div class="master-panel" id="panel-effort">
             <section class="panel">
                 <div class="panel-head">
-                    <h2>⏱️ Effort (Nỗ lực)</h2>
+                    <h2>⏱️ Standard Development Effort</h2>
                     <button class="btn btn-primary" id="addEffortBtn">+ Thêm mới</button>
                 </div>
                 <div class="panel-body" id="effortBody">

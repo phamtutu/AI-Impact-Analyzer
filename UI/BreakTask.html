@@ -116,6 +116,7 @@
     width:100%;
     border-radius:2px;
     transition:all .15s ease;
+    text-decoration: none !important; /* Bỏ gạch chân cho thẻ a */
   }
   .tab-btn-vertical .tab-no{
     font-family:var(--mono);
@@ -127,6 +128,7 @@
   .tab-btn-vertical:hover{
     color:var(--accent);
     background:var(--accent-soft);
+    text-decoration: none !important;
   }
   .tab-btn-vertical.active{
     color:var(--accent);
@@ -349,6 +351,7 @@
       padding:10px 14px;
       white-space:nowrap;
       flex-shrink:0;
+      text-decoration: none !important;
     }
     .tab-btn-vertical.active{
       border-left:none;
@@ -383,13 +386,13 @@
     </div>
 
     <nav class="tabbar-vertical">
-      <a href="BreakTask.html" class="tab-btn-vertical">
+      <a href="BreakTask.html" class="tab-btn-vertical active">
           <span class="tab-no">01</span> Phân tích tác động
       </a>
       <a href="MasterData.html" class="tab-btn-vertical">
-          <span class="tab-no">01</span> Quản lý master data
+          <span class="tab-no">02</span> Quản lý master data
       </a>
-      <a href="AnalyzerSourceCode.html" class="tab-btn-vertical active">
+      <a href="AnalyzerSourceCode.html" class="tab-btn-vertical">
           <span class="tab-no">03</span> Quản lý source
       </a>
     </nav>
