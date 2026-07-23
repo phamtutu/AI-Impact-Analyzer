@@ -42,7 +42,8 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from fastapi import HTTPException
-
+from typing import Optional
+from math import ceil
 from analyzer import analyze_project  
 
 PROJECT_JSON = "project-knowledge.json"
@@ -103,13 +104,17 @@ def get_database():
 from typing import Optional
 
 @app.get("/modules")
-def get_modules(file_name: Optional[str] = None):
+def get_modules(
+    page: int = 1,
+    size: int = 10,
+    file_name: Optional[str] = None
+):
 
     project = load_project()
 
-    result = []
-
     keyword = file_name.lower().strip() if file_name else None
+
+    modules = []
 
     for module in project["modules"]:
 
@@ -129,7 +134,7 @@ def get_modules(file_name: Optional[str] = None):
                 ]
             })
 
-        result.append({
+        modules.append({
 
             "file_name": module["file_name"],
             "file_path": module["file_path"],
@@ -163,7 +168,18 @@ def get_modules(file_name: Optional[str] = None):
             ]
         })
 
-    return result
+    total = len(modules)
+
+    start = (page - 1) * size
+    end = start + size
+
+    return {
+        "page": page,
+        "size": size,
+        "total": total,
+        "total_pages": ceil(total / size) if total else 0,
+        "data": modules[start:end]
+    }
 
 @app.get("/project")
 def get_project():
