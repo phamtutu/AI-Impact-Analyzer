@@ -1,6 +1,7 @@
 // ──────────────────────────────────────────────
 //  Effort Manager - Quản lý Effort (Development Effort)
 //  Theo bảng: Development Type, Change Type, Complexity
+
 // ──────────────────────────────────────────────
 
 // ─── State ───
