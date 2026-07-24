@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Quản lý source · Phân tích mã nguồn</title>
+    <title>Source Code Analysis and Management</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
     <style>
@@ -613,7 +613,7 @@
     <aside class="sidebar">
         <div class="sidebar-header">
             <div class="brand">
-                <h1>Quản lý source · Phân tích mã nguồn</h1>
+                <h1>Source Code Analysis and Management</h1>
             </div>
         </div>
 
@@ -652,7 +652,7 @@
         <section class="panel">
             <div class="panel-head">
                 <h2>🔬 Phân tích source code</h2>
-                <span style="font-family:var(--mono);font-size:11px;color:var(--ink-soft);">POST /analyze-source</span>
+                <span style="font-family:var(--mono);font-size:11px;color:var(--ink-soft);"></span>
             </div>
             <div class="panel-body">
                 <form id="analyzeForm">
@@ -858,7 +858,6 @@
             projectBody.innerHTML = `
                 <div class="stats-grid">
                     <div class="stat-card"><div class="num">${esc(data.name)}</div><div class="lbl">Tên project</div></div>
-                    <div class="stat-card"><div class="num" style="font-size:16px;">${esc(data.path)}</div><div class="lbl">Đường dẫn</div></div>
                     <div class="stat-card"><div class="num">${esc(data.database)}</div><div class="lbl">CSDL</div></div>
                     <div class="stat-card"><div class="num">${data.total_tables}</div><div class="lbl">Bảng</div></div>
                     <div class="stat-card"><div class="num">${data.total_modules}</div><div class="lbl">Module</div></div>

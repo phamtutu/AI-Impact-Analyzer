@@ -1,0 +1,83 @@
+{
+  "requirement": {
+    "title": "Tạo thông báo khi giao task cho người dùng",
+    "requirement": "Khi một task được tạo mới hoặc cập nhật người thực hiện, hệ thống phải tự động tạo thông báo cho người được giao task. Thông báo phải chứa tên task, tên project, người giao task và thời hạn hoàn thành. Người dùng có thể xem danh sách thông báo và đánh dấu thông báo đã đọc.",
+    "change_type": "Khác",
+    "current_behavior": "Hiện tại hệ thống cho phép tạo task và gán người thực hiện thông qua trường assignedTo của entity Task. Tuy nhiên, sau khi task được giao hoặc thay đổi người thực hiện, hệ thống chưa tự động tạo bản ghi trong bảng notifications và người được giao không nhận được thông báo.",
+    "expected_behavior": "Khi tạo mới task có assignedTo hoặc khi cập nhật assignedTo sang một người dùng khác, hệ thống tự động tạo một bản ghi trong bảng notifications cho người được giao mới. Thông báo có title, message, referenceType là TASK, referenceId là ID của task, isRead mặc định là false và createdAt là thời điểm hiện tại. Hệ thống cung cấp API lấy danh sách thông báo theo userId và API đánh dấu thông báo đã đọc.",
+    "business_rules": [
+      "Chỉ tạo thông báo khi task có người được giao.",
+      "Khi tạo mới task, hệ thống tạo thông báo cho người dùng trong trường assignedTo.",
+      "Khi thay đổi assignedTo, hệ thống chỉ tạo thông báo cho người được giao mới.",
+      "Không tạo thông báo nếu assignedTo không thay đổi.",
+      "Không tạo thông báo nếu task đã bị xóa logic với isDeleted bằng true.",
+      "Người nhận task phải tồn tại trong bảng users và có isActive bằng true.",
+      "referenceType của thông báo phải có giá trị TASK.",
+      "referenceId của thông báo phải bằng ID của task.",
+      "isRead của thông báo mới phải có giá trị mặc định là false.",
+      "createdAt của thông báo phải là thời điểm hệ thống tạo thông báo.",
+      "Việc lưu task và tạo notification phải nằm trong cùng một transaction.",
+      "Nếu tạo notification thất bại thì transaction tạo hoặc cập nhật task phải rollback.",
+      "Chỉ người sở hữu thông báo mới được phép đánh dấu thông báo đó là đã đọc."
+    ],
+    "impact_hints": {
+      "related_modules": [
+        "TASK_MANAGEMENT",
+        "NOTIFICATION",
+        "USER_MANAGEMENT",
+        "PROJECT_MANAGEMENT"
+      ],
+      "related_tables": [
+        "tasks",
+        "notifications",
+        "users",
+        "projects"
+      ],
+      "related_columns": [
+        "tasks.id",
+        "tasks.title",
+        "tasks.assigned_to",
+        "tasks.created_by",
+        "tasks.project_id",
+        "tasks.end_time",
+        "tasks.is_deleted",
+        "notifications.id",
+        "notifications.user_id",
+        "notifications.title",
+        "notifications.message",
+        "notifications.is_read",
+        "notifications.created_at",
+        "notifications.reference_type",
+        "notifications.reference_id",
+        "users.id",
+        "users.first_name",
+        "users.last_name",
+        "users.email",
+        "users.is_active",
+        "projects.id",
+        "projects.name"
+      ],
+      "technical_keywords": [
+        "Spring Boot",
+        "Spring Data JPA",
+        "Jakarta Persistence",
+        "Task",
+        "Notification",
+        "TaskService",
+        "NotificationService",
+        "NotificationRepository",
+        "assignedTo",
+        "referenceType",
+        "referenceId",
+        "transaction management",
+        "@Transactional",
+        "dirty checking",
+        "REST API",
+        "authorization",
+        "logical delete",
+        "MariaDB"
+      ]
+    }
+  },
+  "code_map_path": "./data/project-knowledge.json"
+}
