@@ -45,7 +45,10 @@ from pydantic import BaseModel
 from fastapi import HTTPException
 from typing import Optional
 from math import ceil
-from analyzer import analyze_project  
+from analyzer import analyze_project
+from be.effort_detail.effort_router import (router as effort_router,)
+from be.complexity_detail.complexity_router import (router as complexity_router,)
+from be.database_master.database_master_router import (router as database_master_router,)  
 
 PROJECT_JSON = "project-knowledge.json"
 
@@ -59,6 +62,10 @@ app = FastAPI(
     title="Source Code Task Breakdown API",
     description="Nhận requirement (structured) + code map (JSON từ analyzer.py) -> trả về impact analysis + task breakdown",
 )
+
+app.include_router(effort_router)
+app.include_router(complexity_router)
+app.include_router(database_master_router)
 
 app.add_middleware(
     CORSMiddleware,

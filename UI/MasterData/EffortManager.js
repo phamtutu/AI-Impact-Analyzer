@@ -1,134 +1,253 @@
-// ──────────────────────────────────────────────
-//  Effort Manager - Quản lý Effort (Development Effort)
-//  Theo bảng: Development Type, Change Type, Complexity
+const API = "http://127.0.0.1:8000/api/v1/effort-details";
 
-// ──────────────────────────────────────────────
+const state = {
+  items: [],
+  options: null,
+  editingKey: null,
+};
 
-// ─── State ───
-let effortData = [
-    // Web - Online_Web - New
-    { id: 1, dev_type: 'WEB', dev_sub_type: 'Online_Web', change_type: '신규 (New)', complexity: 'C0', effort: 1.1 },
-    { id: 2, dev_type: 'WEB', dev_sub_type: 'Online_Web', change_type: '신규 (New)', complexity: 'C1', effort: 1.8 },
-    { id: 3, dev_type: 'WEB', dev_sub_type: 'Online_Web', change_type: '신규 (New)', complexity: 'C2', effort: 3.2 },
-    { id: 4, dev_type: 'WEB', dev_sub_type: 'Online_Web', change_type: '신규 (New)', complexity: 'C3', effort: 5.0 },
-    { id: 5, dev_type: 'WEB', dev_sub_type: 'Online_Web', change_type: '신규 (New)', complexity: 'C4', effort: 7.4 },
-    { id: 6, dev_type: 'WEB', dev_sub_type: 'Online_Web', change_type: '신규 (New)', complexity: 'C5', effort: 11.9 },
-    // Web - Online_Web - Change
-    { id: 7, dev_type: 'WEB', dev_sub_type: 'Online_Web', change_type: '변경 (Change)', complexity: 'C0', effort: 0.6 },
-    { id: 8, dev_type: 'WEB', dev_sub_type: 'Online_Web', change_type: '변경 (Change)', complexity: 'C1', effort: 1.0 },
-    { id: 9, dev_type: 'WEB', dev_sub_type: 'Online_Web', change_type: '변경 (Change)', complexity: 'C2', effort: 2.3 },
-    { id: 10, dev_type: 'WEB', dev_sub_type: 'Online_Web', change_type: '변경 (Change)', complexity: 'C3', effort: 3.6 },
-    { id: 11, dev_type: 'WEB', dev_sub_type: 'Online_Web', change_type: '변경 (Change)', complexity: 'C4', effort: 5.3 },
-    { id: 12, dev_type: 'WEB', dev_sub_type: 'Online_Web', change_type: '변경 (Change)', complexity: 'C5', effort: 8.9 },
-];
+const $ = (id) => document.getElementById(id);
 
-let nextEffortId = 13;
+async function request(url, options = {}) {
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    },
+  });
 
-// ─── DOM refs ───
-const effortBody = document.getElementById('effortBody');
-const effortCount = document.getElementById('effortCount');
+  if (!response.ok) {
+    let message = `HTTP ${response.status}`;
+    try {
+      const body = await response.json();
+      message =
+        typeof body.detail === "string"
+          ? body.detail
+          : JSON.stringify(body.detail);
+    } catch (_) {}
+    throw new Error(message);
+  }
 
-// ─── Helpers ───
-function esc(s) {
-    return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;',
-        "'": '&#39;' }[c]));
+  return response.status === 204 ? null : response.json();
 }
 
-// ─── Render ───
-function renderEffort() {
-    effortCount.textContent = effortData.length;
-    if (!effortData.length) {
-        effortBody.innerHTML = `<div class="empty"><div class="glyph">— · · —</div>Chưa có dữ liệu effort.</div>`;
-        return;
-    }
+function escapeHtml(value) {
+  return String(value ?? "").replace(
+    /[&<>'"]/g,
+    (character) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "'": "&#39;",
+        '"': "&quot;",
+      }[character])
+  );
+}
 
-    let html = `<div class="table-scroll"><table class="data-table">
-        <thead><tr>
-            <th style="width:50px;">ID</th>
-            <th style="min-width:80px;">Dev Type</th>
-            <th style="min-width:120px;">Dev Sub Type</th>
-            <th style="min-width:130px;">Change Type</th>
-            <th style="width:70px;">Complexity</th>
-            <th style="width:100px;">Effort (ngày)</th>
-            <th style="width:120px;">Thao tác</th>
-        </tr></thead><tbody>`;
+function fillOptions(select, values, includeAll = false) {
+  select.innerHTML = includeAll ? '<option value="">Tất cả</option>' : "";
+  values.forEach((value) => select.add(new Option(value, value)));
+}
 
-    effortData.forEach(item => {
-        const colorClass = item.complexity === 'C0' || item.complexity === 'C1' ? 'tag-blue' :
-                          item.complexity === 'C2' || item.complexity === 'C3' ? 'tag-amber' : 'tag-red';
-        const changeClass = item.change_type.includes('신규') ? 'tag-blue' : 'tag-amber';
-        html += `<tr>
-            <td style="text-align:center;">${item.id}</td>
-            <td><span class="tag">${esc(item.dev_type)}</span></td>
-            <td>${esc(item.dev_sub_type)}</td>
-            <td><span class="tag ${changeClass}">${esc(item.change_type)}</span></td>
-            <td style="text-align:center;"><span class="tag ${colorClass}">${esc(item.complexity)}</span></td>
-            <td style="text-align:center;font-weight:700;font-family:var(--mono);font-size:14px;color:var(--accent);">${item.effort}</td>
-            <td>
-                <div class="actions-cell">
-                    <button class="btn btn-secondary btn-sm" onclick="window.editEffort(${item.id})">✏️</button>
-                    <button class="btn btn-danger btn-sm" onclick="window.deleteEffort(${item.id})">🗑️</button>
-                </div>
-            </td>
-        </tr>`;
+async function loadOptions() {
+  state.options = await request(`${API}/options`);
+
+  fillOptions($("effortDevType"), state.options.dev_type);
+  fillOptions($("effortDevSubType"), state.options.dev_sub_type);
+  fillOptions($("effortChangeType"), state.options.change_type);
+  fillOptions($("effortComplexity"), state.options.complexity);
+}
+
+async function loadEfforts() {
+  try {
+    const data = await request(`${API}?page=1&size=100`);
+    state.items = data.items;
+    $("effortCount").textContent = data.total;
+    renderEffortTable(data.items);
+  } catch (error) {
+    showToast(error.message, true);
+  }
+}
+
+function renderEffortTable(items) {
+  const body = $("effortBody");
+
+  if (!items.length) {
+    body.innerHTML = `
+            <div class="empty">
+                <div class="glyph">— · · —</div>
+                Chưa có dữ liệu effort.
+            </div>`;
+    return;
+  }
+
+  const rows = items
+    .map((item) => {
+      const encoded = encodeURIComponent(JSON.stringify(item));
+      return `
+            <tr>
+                <td>${escapeHtml(item.dev_type)}</td>
+                <td>${escapeHtml(item.dev_sub_type)}</td>
+                <td><span class="tag ${
+                  item.change_type === "CHANGE" ? "tag-amber" : ""
+                }">${escapeHtml(item.change_type)}</span></td>
+                <td><span class="tag tag-blue">${escapeHtml(
+                  item.complexity
+                )}</span></td>
+                <td>${Number(item.standard_effort).toFixed(2)}</td>
+                <td>
+                    <div class="actions-cell">
+                        <button type="button" class="btn btn-secondary btn-sm" data-action="edit" data-item="${encoded}">Sửa</button>
+                        <button type="button" class="btn btn-danger btn-sm" data-action="delete" data-item="${encoded}">Xóa</button>
+                    </div>
+                </td>
+            </tr>`;
+    })
+    .join("");
+
+  body.innerHTML = `
+        <div class="table-scroll">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Dev Type</th>
+                        <th>Dev Sub Type</th>
+                        <th>Change Type</th>
+                        <th>Complexity</th>
+                        <th>Standard Effort</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>`;
+}
+
+function keyOf(item) {
+  return {
+    dev_type: item.dev_type,
+    dev_sub_type: item.dev_sub_type,
+    change_type: item.change_type,
+    complexity: item.complexity,
+  };
+}
+
+function keyQuery(key) {
+  return new URLSearchParams(key).toString();
+}
+
+function openEffortModal(item = null) {
+  state.editingKey = item ? keyOf(item) : null;
+  $("effortModalTitle").textContent = item
+    ? "Sửa Effort Detail"
+    : "Thêm Effort Detail";
+
+  $("effortDevType").value = item?.dev_type ?? state.options.dev_type[0];
+  $("effortDevSubType").value =
+    item?.dev_sub_type ?? state.options.dev_sub_type[0];
+  $("effortChangeType").value =
+    item?.change_type ?? state.options.change_type[0];
+  $("effortComplexity").value = item?.complexity ?? state.options.complexity[0];
+  $("effortStandardEffort").value = item?.standard_effort ?? "";
+  $("effortFormError").textContent = "";
+  $("effortFormError").classList.add("hidden");
+  $("effortModal").classList.remove("hidden");
+}
+
+function closeEffortModal() {
+  $("effortModal").classList.add("hidden");
+  $("effortForm").reset();
+  $("effortFormError").classList.add("hidden");
+  state.editingKey = null;
+}
+
+function formPayload() {
+  return {
+    dev_type: $("effortDevType").value,
+    dev_sub_type: $("effortDevSubType").value,
+    change_type: $("effortChangeType").value,
+    complexity: $("effortComplexity").value,
+    standard_effort: $("effortStandardEffort").value,
+  };
+}
+
+async function saveEffort(event) {
+  event.preventDefault();
+  const isEdit = state.editingKey !== null;
+  const url = isEdit ? `${API}/detail?${keyQuery(state.editingKey)}` : API;
+  const method = isEdit ? "PUT" : "POST";
+
+  $("saveEffortBtn").disabled = true;
+  try {
+    await request(url, {
+      method,
+      body: JSON.stringify(formPayload()),
     });
-
-    html += `</tbody></table></div>`;
-    effortBody.innerHTML = html;
+    showToast(isEdit ? "Cập nhật effort thành công" : "Thêm effort thành công");
+    closeEffortModal();
+    await loadEfforts();
+  } catch (error) {
+    $("effortFormError").textContent = error.message;
+    $("effortFormError").classList.remove("hidden");
+  } finally {
+    $("saveEffortBtn").disabled = false;
+  }
 }
 
-// ─── CRUD Operations ───
-function addEffort() {
-    const dev_type = prompt('Nhập Development Type (WEB, APP, ...):') || 'WEB';
-    const dev_sub_type = prompt('Nhập Development Sub Type (Online_Web, Mobile, ...):') || 'Online_Web';
-    const change_type = prompt('Nhập Change Type (신규 (New), 변경 (Change)):') || '신규 (New)';
-    const complexity = prompt('Nhập Complexity (C0, C1, C2, C3, C4, C5):') || 'C0';
-    const effort = parseFloat(prompt('Nhập Effort (số ngày công):') || '0');
+async function deleteEffort(item) {
+  if (
+    !window.confirm(
+      `Xóa ${item.dev_type} / ${item.dev_sub_type} / ${item.change_type} / ${item.complexity}?`
+    )
+  ) {
+    return;
+  }
 
-    effortData.push({
-        id: nextEffortId++,
-        dev_type,
-        dev_sub_type,
-        change_type,
-        complexity,
-        effort
+  try {
+    await request(`${API}/detail?${keyQuery(keyOf(item))}`, {
+      method: "DELETE",
     });
-    renderEffort();
+    showToast("Xóa effort thành công");
+    await loadEfforts();
+  } catch (error) {
+    showToast(error.message, true);
+  }
 }
 
-function editEffort(id) {
-    const item = effortData.find(e => e.id === id);
-    if (!item) return;
-
-    const dev_type = prompt('Development Type:', item.dev_type) || item.dev_type;
-    const dev_sub_type = prompt('Development Sub Type:', item.dev_sub_type) || item.dev_sub_type;
-    const change_type = prompt('Change Type:', item.change_type) || item.change_type;
-    const complexity = prompt('Complexity:', item.complexity) || item.complexity;
-    const effort = parseFloat(prompt('Effort:', item.effort) || item.effort);
-
-    item.dev_type = dev_type;
-    item.dev_sub_type = dev_sub_type;
-    item.change_type = change_type;
-    item.complexity = complexity;
-    item.effort = effort;
-    renderEffort();
+function showToast(message, isError = false) {
+  const toast = $("masterToast");
+  toast.textContent = message;
+  toast.classList.toggle("error", isError);
+  toast.classList.remove("hidden");
+  clearTimeout(showToast.timer);
+  showToast.timer = setTimeout(() => toast.classList.add("hidden"), 3500);
 }
 
-function deleteEffort(id) {
-    if (!confirm('Bạn có chắc chắn muốn xóa effort này?')) return;
-    effortData = effortData.filter(e => e.id !== id);
-    renderEffort();
+function bindEvents() {
+  $("addEffortBtn").addEventListener("click", () => openEffortModal());
+  $("closeEffortModal").addEventListener("click", closeEffortModal);
+  $("cancelEffortBtn").addEventListener("click", closeEffortModal);
+  $("effortForm").addEventListener("submit", saveEffort);
+  $("effortModal").addEventListener("click", (event) => {
+    if (event.target === $("effortModal")) closeEffortModal();
+  });
+  $("effortBody").addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-action]");
+    if (!button) return;
+    const item = JSON.parse(decodeURIComponent(button.dataset.item));
+    if (button.dataset.action === "edit") openEffortModal(item);
+    if (button.dataset.action === "delete") deleteEffort(item);
+  });
 }
 
-// ─── Export to global scope ───
-window.addEffort = addEffort;
-window.editEffort = editEffort;
-window.deleteEffort = deleteEffort;
-
-// ─── Event Listeners ───
-document.getElementById('addEffortBtn').addEventListener('click', addEffort);
-
-// ─── Init ───
-renderEffort();
-
-console.log('✅ Effort Manager loaded');
+(async function initializeEffortManager() {
+  bindEvents();
+  try {
+    await loadOptions();
+    await loadEfforts();
+  } catch (error) {
+    showToast(error.message, true);
+  }
+})();

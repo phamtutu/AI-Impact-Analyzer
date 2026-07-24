@@ -1,554 +1,1052 @@
 <!DOCTYPE html>
 <html lang="vi">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Quản lý Master Data</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        /* ── reset & base ── */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        :root {
-            --ink: #1a1d23;
-            --ink-soft: #5b6270;
-            --paper: #f6f7f5;
-            --panel: #ffffff;
-            --line: #dfe3de;
-            --green-head: #cfe3c3;
-            --green-head-strong: #a8c6a0;
-            --green-deep: #3f6b3a;
-            --accent: #2f5233;
-            --accent-soft: #e7efe4;
-            --red: #b23b3b;
-            --red-soft: #fbe9e9;
-            --amber: #a3760b;
-            --amber-soft: #faf1dc;
-            --blue: #1a5a8c;
-            --blue-soft: #dde8f5;
-            --mono: 'JetBrains Mono', monospace;
-            --sans: 'Be Vietnam Pro', sans-serif;
-        }
-        body {
-            margin: 0;
-            font-family: var(--sans);
-            color: var(--ink);
-            background: radial-gradient(circle at top right, #f5f9f6 0%, transparent 40%),
-                radial-gradient(circle at bottom left, #eef5ef 0%, transparent 45%),
-                linear-gradient(180deg, #fafbfc 0%, #eef2f3 100%);
-            min-height: 100vh;
-        }
+      /* ── reset & base ── */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --ink: #1a1d23;
+        --ink-soft: #5b6270;
+        --paper: #f6f7f5;
+        --panel: #ffffff;
+        --line: #dfe3de;
+        --green-head: #cfe3c3;
+        --green-head-strong: #a8c6a0;
+        --green-deep: #3f6b3a;
+        --accent: #2f5233;
+        --accent-soft: #e7efe4;
+        --red: #b23b3b;
+        --red-soft: #fbe9e9;
+        --amber: #a3760b;
+        --amber-soft: #faf1dc;
+        --blue: #1a5a8c;
+        --blue-soft: #dde8f5;
+        --mono: "JetBrains Mono", monospace;
+        --sans: "Be Vietnam Pro", sans-serif;
+      }
+      body {
+        margin: 0;
+        font-family: var(--sans);
+        color: var(--ink);
+        background: radial-gradient(
+            circle at top right,
+            #f5f9f6 0%,
+            transparent 40%
+          ),
+          radial-gradient(circle at bottom left, #eef5ef 0%, transparent 45%),
+          linear-gradient(180deg, #fafbfc 0%, #eef2f3 100%);
+        min-height: 100vh;
+      }
 
-        /* ── Layout với sidebar dọc ── */
+      /* ── Layout với sidebar dọc ── */
+      .app-layout {
+        display: flex;
+        min-height: 100vh;
+      }
+
+      /* ── Sidebar dọc ── */
+      .sidebar {
+        width: 240px;
+        min-height: 100vh;
+        background: var(--panel);
+        border-right: 1px solid var(--line);
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow-y: auto;
+      }
+
+      .sidebar-header {
+        padding: 20px 18px 12px;
+        border-bottom: 1px solid var(--line);
+        background: var(--accent);
+        color: #f4f6f2;
+      }
+      .sidebar-header .brand {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .sidebar-header .brand .no {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        opacity: 0.75;
+      }
+      .sidebar-header h1 {
+        font-size: 15px;
+        margin: 0;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+        line-height: 1.3;
+      }
+      .sidebar-header .sub {
+        font-size: 11px;
+        color: #dce7d8;
+        font-family: var(--mono);
+        margin-top: 4px;
+      }
+
+      .tabbar-vertical {
+        display: flex;
+        flex-direction: column;
+        padding: 12px 8px;
+        gap: 2px;
+        flex: 1;
+      }
+
+      .tab-btn-vertical {
+        font-family: var(--sans);
+        font-size: 13.5px;
+        font-weight: 600;
+        color: var(--ink-soft);
+        background: transparent;
+        border: none;
+        border-left: 3px solid transparent;
+        padding: 12px 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-align: left;
+        width: 100%;
+        border-radius: 2px;
+        transition: all 0.15s ease;
+        text-decoration: none !important;
+      }
+      .tab-btn-vertical .tab-no {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--line);
+        font-weight: 600;
+        min-width: 24px;
+      }
+      .tab-btn-vertical:hover {
+        color: var(--accent);
+        background: var(--accent-soft);
+        text-decoration: none !important;
+      }
+      .tab-btn-vertical.active {
+        color: var(--accent);
+        border-left-color: var(--green-deep);
+        background: var(--accent-soft);
+      }
+      .tab-btn-vertical.active .tab-no {
+        color: var(--green-deep);
+      }
+
+      .sidebar-footer {
+        padding: 12px 16px;
+        border-top: 1px solid var(--line);
+        font-size: 10.5px;
+        color: var(--ink-soft);
+        font-family: var(--mono);
+        text-align: center;
+      }
+
+      /* ── Main content ── */
+      .main-content {
+        flex: 1;
+        padding: 28px 32px 60px;
+        max-width: calc(100% - 240px);
+      }
+
+      /* ── Tabbar ngang cho master data ── */
+      .master-tabbar {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-bottom: none;
+        display: flex;
+        gap: 2px;
+        padding: 0 4px;
+        margin-bottom: 0;
+      }
+      .master-tab-btn {
+        font-family: var(--sans);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--ink-soft);
+        background: transparent;
+        border: none;
+        border-bottom: 3px solid transparent;
+        padding: 12px 20px 10px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.15s ease;
+      }
+      .master-tab-btn:hover {
+        color: var(--accent);
+        background: var(--accent-soft);
+      }
+      .master-tab-btn.active {
+        color: var(--accent);
+        border-bottom-color: var(--green-deep);
+        background: var(--accent-soft);
+      }
+      .master-tab-btn .badge {
+        font-family: var(--mono);
+        font-size: 10px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        padding: 0 6px;
+        border-radius: 2px;
+      }
+
+      /* ── panel ── */
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
+      }
+      .panel + .panel {
+        margin-top: 22px;
+      }
+
+      .panel-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 18px;
+        background: var(--accent-soft);
+        border-bottom: 1px solid var(--line);
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .panel-head h2 {
+        font-size: 13px;
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 0.09em;
+        color: var(--accent);
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .panel-head h2 .count {
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--ink-soft);
+        background: #fff;
+        padding: 0 8px;
+        border-radius: 2px;
+        border: 1px solid var(--line);
+      }
+      .panel-body {
+        padding: 20px 22px;
+      }
+
+      .master-panel {
+        display: none;
+      }
+      .master-panel.active {
+        display: block;
+      }
+
+      /* ── buttons ── */
+      .btn {
+        padding: 8px 16px;
+        font-family: var(--sans);
+        font-size: 13px;
+        font-weight: 600;
+        border: none;
+        border-radius: 2px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .btn-primary {
+        background: var(--accent);
+        color: #fff;
+      }
+      .btn-primary:hover {
+        background: var(--green-deep);
+      }
+      .btn-secondary {
+        background: var(--accent-soft);
+        color: var(--accent);
+        border: 1px solid var(--line);
+      }
+      .btn-secondary:hover {
+        background: var(--green-head);
+      }
+      .btn-danger {
+        background: var(--red-soft);
+        color: var(--red);
+        border: 1px solid var(--red);
+      }
+      .btn-danger:hover {
+        background: var(--red);
+        color: #fff;
+      }
+      .btn-sm {
+        padding: 4px 10px;
+        font-size: 11px;
+      }
+
+      .actions-cell {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+      }
+
+      /* ── table ── */
+      .table-scroll {
+        overflow-x: auto;
+      }
+      table.data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12.5px;
+      }
+      table.data-table th {
+        background: var(--green-head);
+        border: 1px solid var(--green-head-strong);
+        padding: 8px 10px;
+        text-align: left;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #2d4227;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      table.data-table td {
+        border: 1px solid var(--line);
+        padding: 9px 10px;
+        vertical-align: middle;
+      }
+      table.data-table tbody tr:nth-child(odd) {
+        background: #fbfcfa;
+      }
+      table.data-table tbody tr:hover {
+        background: var(--accent-soft);
+      }
+
+      .empty {
+        padding: 32px 16px;
+        text-align: center;
+        color: var(--ink-soft);
+        font-size: 13.5px;
+      }
+      .empty .glyph {
+        font-family: var(--mono);
+        font-size: 22px;
+        color: var(--line);
+        margin-bottom: 6px;
+      }
+
+      .tag {
+        font-family: var(--mono);
+        font-size: 10.5px;
+        padding: 2px 6px;
+        border-radius: 2px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        white-space: nowrap;
+        display: inline-block;
+      }
+      .tag-red {
+        background: var(--red-soft);
+        color: var(--red);
+      }
+      .tag-amber {
+        background: var(--amber-soft);
+        color: var(--amber);
+      }
+      .tag-blue {
+        background: var(--blue-soft);
+        color: var(--blue);
+      }
+
+      /* ── Responsive ── */
+      @media (max-width: 768px) {
         .app-layout {
-            display: flex;
-            min-height: 100vh;
+          flex-direction: column;
         }
-
-        /* ── Sidebar dọc ── */
         .sidebar {
-            width: 240px;
-            min-height: 100vh;
-            background: var(--panel);
-            border-right: 1px solid var(--line);
-            display: flex;
-            flex-direction: column;
-            flex-shrink: 0;
-            position: sticky;
-            top: 0;
-            height: 100vh;
-            overflow-y: auto;
+          width: 100%;
+          min-height: auto;
+          height: auto;
+          position: relative;
+          border-right: none;
+          border-bottom: 1px solid var(--line);
         }
-
         .sidebar-header {
-            padding: 20px 18px 12px;
-            border-bottom: 1px solid var(--line);
-            background: var(--accent);
-            color: #f4f6f2;
-        }
-        .sidebar-header .brand {
-            display: flex;
-            align-items: baseline;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .sidebar-header .brand .no {
-            font-family: var(--mono);
-            font-size: 11px;
-            letter-spacing: .14em;
-            opacity: .75;
+          padding: 14px 16px 10px;
         }
         .sidebar-header h1 {
-            font-size: 15px;
-            margin: 0;
-            font-weight: 700;
-            letter-spacing: .01em;
-            line-height: 1.3;
+          font-size: 14px;
         }
-        .sidebar-header .sub {
-            font-size: 11px;
-            color: #dce7d8;
-            font-family: var(--mono);
-            margin-top: 4px;
-        }
-
         .tabbar-vertical {
-            display: flex;
-            flex-direction: column;
-            padding: 12px 8px;
-            gap: 2px;
-            flex: 1;
+          flex-direction: row;
+          padding: 8px 12px;
+          overflow-x: auto;
+          flex-wrap: nowrap;
         }
-
         .tab-btn-vertical {
-            font-family: var(--sans);
-            font-size: 13.5px;
-            font-weight: 600;
-            color: var(--ink-soft);
-            background: transparent;
-            border: none;
-            border-left: 3px solid transparent;
-            padding: 12px 16px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            text-align: left;
-            width: 100%;
-            border-radius: 2px;
-            transition: all .15s ease;
-            text-decoration: none !important;
-        }
-        .tab-btn-vertical .tab-no {
-            font-family: var(--mono);
-            font-size: 11px;
-            color: var(--line);
-            font-weight: 600;
-            min-width: 24px;
-        }
-        .tab-btn-vertical:hover {
-            color: var(--accent);
-            background: var(--accent-soft);
-            text-decoration: none !important;
+          border-left: none;
+          border-bottom: 3px solid transparent;
+          padding: 10px 14px;
+          white-space: nowrap;
+          flex-shrink: 0;
+          text-decoration: none !important;
         }
         .tab-btn-vertical.active {
-            color: var(--accent);
-            border-left-color: var(--green-deep);
-            background: var(--accent-soft);
+          border-left: none;
+          border-bottom-color: var(--green-deep);
         }
-        .tab-btn-vertical.active .tab-no {
-            color: var(--green-deep);
-        }
-
-        .sidebar-footer {
-            padding: 12px 16px;
-            border-top: 1px solid var(--line);
-            font-size: 10.5px;
-            color: var(--ink-soft);
-            font-family: var(--mono);
-            text-align: center;
-        }
-
-        /* ── Main content ── */
         .main-content {
-            flex: 1;
-            padding: 28px 32px 60px;
-            max-width: calc(100% - 240px);
+          max-width: 100%;
+          padding: 20px 16px 40px;
         }
-
-        /* ── Tabbar ngang cho master data ── */
         .master-tabbar {
-            background: var(--panel);
-            border: 1px solid var(--line);
-            border-bottom: none;
-            display: flex;
-            gap: 2px;
-            padding: 0 4px;
-            margin-bottom: 0;
+          overflow-x: auto;
+          flex-wrap: nowrap;
         }
         .master-tab-btn {
-            font-family: var(--sans);
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--ink-soft);
-            background: transparent;
-            border: none;
-            border-bottom: 3px solid transparent;
-            padding: 12px 20px 10px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all .15s ease;
+          font-size: 12px;
+          padding: 10px 14px;
+          white-space: nowrap;
         }
-        .master-tab-btn:hover {
-            color: var(--accent);
-            background: var(--accent-soft);
+        .sidebar-footer {
+          display: none;
         }
-        .master-tab-btn.active {
-            color: var(--accent);
-            border-bottom-color: var(--green-deep);
-            background: var(--accent-soft);
-        }
-        .master-tab-btn .badge {
-            font-family: var(--mono);
-            font-size: 10px;
-            background: var(--accent-soft);
-            color: var(--accent);
-            padding: 0 6px;
-            border-radius: 2px;
-        }
+      }
 
-        /* ── panel ── */
-        .panel {
-            background: var(--panel);
-            border: 1px solid var(--line);
-            box-shadow: 0 1px 0 rgba(0, 0, 0, .02);
+      /* Complexity CRUD */
+      .complexity-toolbar {
+        display: flex;
+        align-items: end;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+      }
+      .complexity-toolbar label,
+      .complexity-form label {
+        display: grid;
+        gap: 6px;
+        color: var(--ink-soft);
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .complexity-toolbar select,
+      .complexity-toolbar input,
+      .complexity-form select,
+      .complexity-form input,
+      .complexity-form textarea {
+        min-width: 160px;
+        padding: 9px 10px;
+        border: 1px solid var(--line);
+        border-radius: 2px;
+        background: #fff;
+        font-family: var(--sans);
+      }
+      .complexity-form textarea {
+        min-height: 90px;
+        resize: vertical;
+      }
+      .complexity-toolbar select:focus,
+      .complexity-toolbar input:focus,
+      .complexity-form select:focus,
+      .complexity-form input:focus,
+      .complexity-form textarea:focus {
+        outline: 2px solid var(--green-head-strong);
+        border-color: var(--green-deep);
+      }
+      .complexity-cell {
+        min-width: 180px;
+        max-width: 260px;
+        white-space: pre-wrap;
+        line-height: 1.45;
+      }
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: grid;
+        place-items: center;
+        padding: 18px;
+        background: rgba(26, 29, 35, 0.52);
+      }
+      .modal-backdrop.hidden {
+        display: none;
+      }
+      .modal-card {
+        width: min(980px, 100%);
+        max-height: 92vh;
+        overflow-y: auto;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22);
+      }
+      .modal-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 18px;
+        color: #fff;
+        background: var(--accent);
+      }
+      .modal-head h3 {
+        font-size: 15px;
+      }
+      .modal-close {
+        border: 0;
+        color: #fff;
+        background: transparent;
+        font-size: 24px;
+        cursor: pointer;
+      }
+      .complexity-form {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        padding: 20px;
+      }
+      .complexity-form .full-width {
+        grid-column: 1 / -1;
+      }
+      .modal-actions {
+        grid-column: 1 / -1;
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+      .form-error {
+        grid-column: 1 / -1;
+        padding: 9px 12px;
+        color: var(--red);
+        background: var(--red-soft);
+        border: 1px solid #efbcbc;
+      }
+      .form-error.hidden,
+      .toast.hidden {
+        display: none;
+      }
+      .toast {
+        position: fixed;
+        right: 22px;
+        bottom: 22px;
+        z-index: 1200;
+        max-width: 380px;
+        padding: 11px 16px;
+        color: #fff;
+        background: var(--green-deep);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      }
+      .toast.error {
+        background: var(--red);
+      }
+      @media (max-width: 760px) {
+        .complexity-form {
+          grid-template-columns: 1fr;
         }
-        .panel + .panel {
-            margin-top: 22px;
+        .complexity-form .full-width,
+        .modal-actions,
+        .form-error {
+          grid-column: auto;
         }
+      }
 
-        .panel-head {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 18px;
-            background: var(--accent-soft);
-            border-bottom: 1px solid var(--line);
-            flex-wrap: wrap;
-            gap: 8px;
+      /* Effort Detail CRUD */
+      .effort-toolbar {
+        display: flex;
+        gap: 10px;
+        align-items: end;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+      }
+      .effort-toolbar label,
+      .effort-form label {
+        display: grid;
+        gap: 6px;
+        color: var(--ink-soft);
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .effort-toolbar select,
+      .effort-form select,
+      .effort-form input {
+        min-width: 150px;
+        height: 38px;
+        padding: 0 10px;
+        border: 1px solid var(--line);
+        border-radius: 2px;
+        background: #fff;
+        font-family: var(--sans);
+      }
+      .effort-toolbar select:focus,
+      .effort-form select:focus,
+      .effort-form input:focus {
+        outline: 2px solid var(--green-head-strong);
+        border-color: var(--green-deep);
+      }
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        z-index: 1000;
+        padding: 20px;
+        background: rgba(26, 29, 35, 0.5);
+      }
+      .modal-backdrop.hidden {
+        display: none;
+      }
+      .modal-card {
+        width: min(680px, 100%);
+        max-height: 90vh;
+        overflow-y: auto;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
+      }
+      .modal-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 18px;
+        color: #fff;
+        background: var(--accent);
+      }
+      .modal-head h3 {
+        font-size: 15px;
+      }
+      .modal-close {
+        border: 0;
+        color: #fff;
+        background: transparent;
+        font-size: 24px;
+        cursor: pointer;
+      }
+      .effort-form {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        padding: 20px;
+      }
+      .effort-form .full-width {
+        grid-column: 1 / -1;
+      }
+      .modal-actions {
+        grid-column: 1 / -1;
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        padding-top: 6px;
+      }
+      .form-error {
+        grid-column: 1 / -1;
+        padding: 9px 12px;
+        color: var(--red);
+        background: var(--red-soft);
+        border: 1px solid #efbcbc;
+      }
+      .form-error.hidden {
+        display: none;
+      }
+      .toast {
+        position: fixed;
+        right: 22px;
+        bottom: 22px;
+        z-index: 1200;
+        max-width: 380px;
+        padding: 11px 16px;
+        color: #fff;
+        background: var(--green-deep);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      }
+      .toast.error {
+        background: var(--red);
+      }
+      .toast.hidden {
+        display: none;
+      }
+      @media (max-width: 680px) {
+        .effort-form {
+          grid-template-columns: 1fr;
         }
-        .panel-head h2 {
-            font-size: 13px;
-            margin: 0;
-            text-transform: uppercase;
-            letter-spacing: .09em;
-            color: var(--accent);
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        .effort-form .full-width {
+          grid-column: auto;
         }
-        .panel-head h2 .count {
-            font-family: var(--mono);
-            font-size: 11px;
-            font-weight: 500;
-            color: var(--ink-soft);
-            background: #fff;
-            padding: 0 8px;
-            border-radius: 2px;
-            border: 1px solid var(--line);
+        .modal-actions,
+        .form-error {
+          grid-column: auto;
         }
-        .panel-body {
-            padding: 20px 22px;
-        }
+      }
 
-        .master-panel {
-            display: none;
+      /* Database Master CRUD */
+      .db-toolbar {
+        display: flex;
+        align-items: end;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+      }
+      .db-toolbar label,
+      .db-form label {
+        display: grid;
+        gap: 6px;
+        color: var(--ink-soft);
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .db-toolbar input,
+      .db-toolbar select,
+      .db-form input,
+      .db-form select,
+      .db-form textarea {
+        min-width: 160px;
+        padding: 9px 10px;
+        border: 1px solid var(--line);
+        border-radius: 2px;
+        background: #fff;
+        font-family: var(--sans);
+      }
+      .db-form textarea {
+        min-height: 100px;
+        resize: vertical;
+      }
+      .db-form {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        padding: 20px;
+      }
+      .db-form .full-width {
+        grid-column: 1 / -1;
+      }
+      @media (max-width: 680px) {
+        .db-form {
+          grid-template-columns: 1fr;
         }
-        .master-panel.active {
-            display: block;
+        .db-form .full-width {
+          grid-column: auto;
         }
+      }
 
-        /* ── buttons ── */
-        .btn {
-            padding: 8px 16px;
-            font-family: var(--sans);
-            font-size: 13px;
-            font-weight: 600;
-            border: none;
-            border-radius: 2px;
-            cursor: pointer;
-            transition: all .15s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .btn-primary {
-            background: var(--accent);
-            color: #fff;
-        }
-        .btn-primary:hover {
-            background: var(--green-deep);
-        }
-        .btn-secondary {
-            background: var(--accent-soft);
-            color: var(--accent);
-            border: 1px solid var(--line);
-        }
-        .btn-secondary:hover {
-            background: var(--green-head);
-        }
-        .btn-danger {
-            background: var(--red-soft);
-            color: var(--red);
-            border: 1px solid var(--red);
-        }
-        .btn-danger:hover {
-            background: var(--red);
-            color: #fff;
-        }
-        .btn-sm {
-            padding: 4px 10px;
-            font-size: 11px;
-        }
-
-        .actions-cell {
-            display: flex;
-            gap: 4px;
-            flex-wrap: wrap;
-        }
-
-        /* ── table ── */
-        .table-scroll {
-            overflow-x: auto;
-        }
-        table.data-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12.5px;
-        }
-        table.data-table th {
-            background: var(--green-head);
-            border: 1px solid var(--green-head-strong);
-            padding: 8px 10px;
-            text-align: left;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: .04em;
-            color: #2d4227;
-            font-weight: 700;
-            white-space: nowrap;
-        }
-        table.data-table td {
-            border: 1px solid var(--line);
-            padding: 9px 10px;
-            vertical-align: middle;
-        }
-        table.data-table tbody tr:nth-child(odd) {
-            background: #fbfcfa;
-        }
-        table.data-table tbody tr:hover {
-            background: var(--accent-soft);
-        }
-
-        .empty {
-            padding: 32px 16px;
-            text-align: center;
-            color: var(--ink-soft);
-            font-size: 13.5px;
-        }
-        .empty .glyph {
-            font-family: var(--mono);
-            font-size: 22px;
-            color: var(--line);
-            margin-bottom: 6px;
-        }
-
-        .tag {
-            font-family: var(--mono);
-            font-size: 10.5px;
-            padding: 2px 6px;
-            border-radius: 2px;
-            background: var(--accent-soft);
-            color: var(--accent);
-            white-space: nowrap;
-            display: inline-block;
-        }
-        .tag-red {
-            background: var(--red-soft);
-            color: var(--red);
-        }
-        .tag-amber {
-            background: var(--amber-soft);
-            color: var(--amber);
-        }
-        .tag-blue {
-            background: var(--blue-soft);
-            color: var(--blue);
-        }
-
-        /* ── Responsive ── */
-        @media (max-width: 768px) {
-            .app-layout {
-                flex-direction: column;
-            }
-            .sidebar {
-                width: 100%;
-                min-height: auto;
-                height: auto;
-                position: relative;
-                border-right: none;
-                border-bottom: 1px solid var(--line);
-            }
-            .sidebar-header {
-                padding: 14px 16px 10px;
-            }
-            .sidebar-header h1 {
-                font-size: 14px;
-            }
-            .tabbar-vertical {
-                flex-direction: row;
-                padding: 8px 12px;
-                overflow-x: auto;
-                flex-wrap: nowrap;
-            }
-            .tab-btn-vertical {
-                border-left: none;
-                border-bottom: 3px solid transparent;
-                padding: 10px 14px;
-                white-space: nowrap;
-                flex-shrink: 0;
-                text-decoration: none !important;
-            }
-            .tab-btn-vertical.active {
-                border-left: none;
-                border-bottom-color: var(--green-deep);
-            }
-            .main-content {
-                max-width: 100%;
-                padding: 20px 16px 40px;
-            }
-            .master-tabbar {
-                overflow-x: auto;
-                flex-wrap: nowrap;
-            }
-            .master-tab-btn {
-                font-size: 12px;
-                padding: 10px 14px;
-                white-space: nowrap;
-            }
-            .sidebar-footer {
-                display: none;
-            }
-        }
+      .db-columns-cell {
+        min-width: 280px;
+        max-width: 460px;
+        white-space: pre-wrap;
+        font-family: var(--mono);
+        font-size: 11px;
+        line-height: 1.5;
+      }
     </style>
-</head>
-<body>
-
-<div class="app-layout">
-
-    <!-- ═══ SIDEBAR DỌC ═══ -->
-    <aside class="sidebar">
+  </head>
+  <body>
+    <div class="app-layout">
+      <!-- ═══ SIDEBAR DỌC ═══ -->
+      <aside class="sidebar">
         <div class="sidebar-header">
-            <div class="brand">
-                <h1>Quản lý Master Data</h1>
-            </div>
+          <div class="brand">
+            <h1>Quản lý Master Data</h1>
+          </div>
         </div>
 
         <nav class="tabbar-vertical">
-            <a href="BreakTask.html" class="tab-btn-vertical">
-                <span class="tab-no">01</span> Phân tích tác động
-            </a>
-            <a href="MasterData.html" class="tab-btn-vertical active">
-                <span class="tab-no">02</span> Quản lý master data
-            </a>
-            <a href="AnalyzerSourceCode.html" class="tab-btn-vertical">
-                <span class="tab-no">03</span> Quản lý source
-            </a>
+          <a href="BreakTask.html" class="tab-btn-vertical">
+            <span class="tab-no">01</span> Phân tích tác động
+          </a>
+          <a href="MasterData.html" class="tab-btn-vertical active">
+            <span class="tab-no">02</span> Quản lý master data
+          </a>
+          <a href="AnalyzerSourceCode.html" class="tab-btn-vertical">
+            <span class="tab-no">03</span> Quản lý source
+          </a>
         </nav>
 
-        <div class="sidebar-footer">
-           
-        </div>
-    </aside>
+        <div class="sidebar-footer"></div>
+      </aside>
 
-    <!-- ═══ MAIN CONTENT ═══ -->
-    <main class="main-content">
-
+      <!-- ═══ MAIN CONTENT ═══ -->
+      <main class="main-content">
         <!-- ─── Master Data Tabbar ─── -->
         <div class="master-tabbar">
-            <button class="master-tab-btn active" data-tab="db">
-                <span>🗄️</span> Quản lý DB
-                <span class="badge" id="dbCount">0</span>
-            </button>
-            <button class="master-tab-btn" data-tab="complexity">
-                <span>📊</span> Quản lý độ phức tạp
-                <span class="badge" id="complexityCount">0</span>
-            </button>
-            <button class="master-tab-btn" data-tab="effort">
-                <span>⏱️</span> Quản lý Effort
-                <span class="badge" id="effortCount">0</span>
-            </button>
+          <button class="master-tab-btn active" data-tab="db">
+            <span>🗄️</span> Quản lý DB
+            <span class="badge" id="dbCount">0</span>
+          </button>
+          <button class="master-tab-btn" data-tab="complexity">
+            <span>📊</span> Quản lý độ phức tạp
+            <span class="badge" id="complexityCount">0</span>
+          </button>
+          <button class="master-tab-btn" data-tab="effort">
+            <span>⏱️</span> Quản lý Effort
+            <span class="badge" id="effortCount">0</span>
+          </button>
         </div>
 
         <!-- ─── Tab: Quản lý DB ─── -->
         <div class="master-panel active" id="panel-db">
-            <section class="panel">
-                <div class="panel-head">
-                    <h2>📋 Danh sách Database Tables</h2>
-                    <button class="btn btn-primary" id="addDbBtn">+ Thêm mới</button>
-                </div>
-                <div class="panel-body" id="dbBody">
-                    <div class="empty"><div class="glyph">— · · —</div>Chưa có dữ liệu database.</div>
-                </div>
-            </section>
+          <section class="panel">
+            <div class="panel-head">
+              <h2>📋 Danh sách Database Tables</h2>
+              <button class="btn btn-primary" id="addDbBtn">+ Thêm mới</button>
+            </div>
+            <div class="panel-body" id="dbBody">
+              <div class="empty">
+                <div class="glyph">— · · —</div>
+                Chưa có dữ liệu database.
+              </div>
+            </div>
+          </section>
         </div>
 
         <!-- ─── Tab: Quản lý độ phức tạp ─── -->
         <div class="master-panel" id="panel-complexity">
-            <section class="panel">
-                <div class="panel-head">
-                    <h2>📊 Độ phức tạp (Complexity C1-C5)</h2>
-                    <button class="btn btn-primary" id="addComplexityBtn">+ Thêm mới</button>
-                </div>
-                <div class="panel-body" id="complexityBody">
-                    <div class="empty"><div class="glyph">— · · —</div>Chưa có dữ liệu độ phức tạp.</div>
-                </div>
-            </section>
+          <section class="panel">
+            <div class="panel-head">
+              <h2>📊 Độ phức tạp (Complexity C1-C5)</h2>
+              <button class="btn btn-primary" id="addComplexityBtn">
+                + Thêm mới
+              </button>
+            </div>
+            <div class="panel-body" id="complexityBody">
+              <div class="empty">
+                <div class="glyph">— · · —</div>
+                Chưa có dữ liệu độ phức tạp.
+              </div>
+            </div>
+          </section>
         </div>
 
         <!-- ─── Tab: Quản lý Effort ─── -->
         <div class="master-panel" id="panel-effort">
-            <section class="panel">
-                <div class="panel-head">
-                    <h2>⏱️ Standard Development Effort</h2>
-                    <button class="btn btn-primary" id="addEffortBtn">+ Thêm mới</button>
-                </div>
-                <div class="panel-body" id="effortBody">
-                    <div class="empty"><div class="glyph">— · · —</div>Chưa có dữ liệu effort.</div>
-                </div>
-            </section>
+          <section class="panel">
+            <div class="panel-head">
+              <h2>⏱️ Standard Development Effort</h2>
+              <button class="btn btn-primary" id="addEffortBtn">
+                + Thêm mới
+              </button>
+            </div>
+            <div class="panel-body" id="effortBody">
+              <div class="empty">
+                <div class="glyph">— · · —</div>
+                Chưa có dữ liệu effort.
+              </div>
+            </div>
+          </section>
         </div>
+      </main>
+    </div>
 
-    </main>
+    <!-- Complexity CRUD modal -->
+    <div class="modal-backdrop hidden" id="complexityModal">
+      <div class="modal-card">
+        <div class="modal-head">
+          <h3 id="complexityModalTitle">Thêm Complexity</h3>
+          <button type="button" class="modal-close" id="closeComplexityModal">
+            ×
+          </button>
+        </div>
+        <form class="complexity-form" id="complexityForm">
+          <label>
+            Loại hình xử lý *
+            <select id="complexityProcessType" required></select>
+          </label>
+          <label class="full-width">
+            Item *
+            <input id="complexityItemName" maxlength="255" required />
+          </label>
+          <label>C1<textarea id="complexityC1"></textarea></label>
+          <label>C2<textarea id="complexityC2"></textarea></label>
+          <label>C3<textarea id="complexityC3"></textarea></label>
+          <label>C4<textarea id="complexityC4"></textarea></label>
+          <label class="full-width"
+            >C5<textarea id="complexityC5"></textarea>
+          </label>
+          <div class="form-error hidden" id="complexityFormError"></div>
+          <div class="modal-actions">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              id="cancelComplexityBtn"
+            >
+              Hủy
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              id="saveComplexityBtn"
+            >
+              Lưu
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div class="toast hidden" id="complexityToast"></div>
 
-</div>
+    <!-- Effort Detail modal -->
+    <div class="modal-backdrop hidden" id="effortModal">
+      <div class="modal-card">
+        <div class="modal-head">
+          <h3 id="effortModalTitle">Thêm Effort Detail</h3>
+          <button type="button" class="modal-close" id="closeEffortModal">
+            ×
+          </button>
+        </div>
+        <form class="effort-form" id="effortForm">
+          <label>
+            Dev Type *
+            <select id="effortDevType" required></select>
+          </label>
+          <label>
+            Dev Sub Type *
+            <select id="effortDevSubType" required></select>
+          </label>
+          <label>
+            Change Type *
+            <select id="effortChangeType" required></select>
+          </label>
+          <label>
+            Complexity *
+            <select id="effortComplexity" required></select>
+          </label>
+          <label class="full-width">
+            Standard Effort *
+            <input
+              id="effortStandardEffort"
+              type="number"
+              min="0"
+              step="0.01"
+              required
+            />
+          </label>
+          <div class="form-error hidden" id="effortFormError"></div>
+          <div class="modal-actions">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              id="cancelEffortBtn"
+            >
+              Hủy
+            </button>
+            <button type="submit" class="btn btn-primary" id="saveEffortBtn">
+              Lưu
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div class="toast hidden" id="masterToast"></div>
 
-<!-- Import các module con -->
-<script type="module">
-    // Import các module
-    import './MasterData/DBManager.js';
-    import './MasterData/ComplexityManager.js';
-    import './MasterData/EffortManager.js';
-    
-    // ──────────────────────────────────────────────
-    //  Tab switching (master tabs)
-    // ──────────────────────────────────────────────
-    const masterTabBtns = document.querySelectorAll('.master-tab-btn');
-    const masterPanels = {
-        db: document.getElementById('panel-db'),
-        complexity: document.getElementById('panel-complexity'),
-        effort: document.getElementById('panel-effort'),
-    };
+    <!-- Database Master modal -->
+    <div class="modal-backdrop hidden" id="dbModal">
+      <div class="modal-card">
+        <div class="modal-head">
+          <h3 id="dbModalTitle">Thêm Database Table</h3>
+          <button type="button" class="modal-close" id="closeDbModal">×</button>
+        </div>
+        <form class="db-form" id="dbForm">
+          <label>
+            Schema Name *
+            <input
+              id="dbSchemaName"
+              maxlength="100"
+              value="effort_db"
+              required
+            />
+          </label>
+          <label>
+            Table Name *
+            <input id="dbTableName" maxlength="150" required />
+          </label>
+          <label class="full-width">
+            Columns Info
+            <textarea
+              id="dbColumnsInfo"
+              maxlength="10000"
+              rows="8"
+              placeholder="Ví dụ:
+user_id BIGINT PK AUTO_INCREMENT
+user_name VARCHAR(100) NOT NULL
+created_at DATETIME DEFAULT CURRENT_TIMESTAMP"
+            ></textarea>
+          </label>
+          <label>
+            Module Name
+            <input id="dbModuleName" maxlength="150" />
+          </label>
+          <label>
+            Active
+            <select id="dbActiveYn">
+              <option value="Y">Y</option>
+              <option value="N">N</option>
+            </select>
+          </label>
+          <label class="full-width">
+            Description
+            <textarea id="dbTableDescription" maxlength="4000"></textarea>
+          </label>
+          <div class="form-error hidden" id="dbFormError"></div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" id="cancelDbBtn">
+              Hủy
+            </button>
+            <button type="submit" class="btn btn-primary" id="saveDbBtn">
+              Lưu
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div class="toast hidden" id="dbToast"></div>
 
-    masterTabBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            masterTabBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            Object.values(masterPanels).forEach(p => p.classList.remove('active'));
-            const tab = btn.dataset.tab;
-            if (masterPanels[tab]) {
-                masterPanels[tab].classList.add('active');
-            }
+    <!-- Import các module con -->
+    <script type="module">
+      // Import các module
+      import "./MasterData/DBManager.js";
+      import "./MasterData/ComplexityManager.js";
+      import "./MasterData/EffortManager.js";
+
+      // ──────────────────────────────────────────────
+      //  Tab switching (master tabs)
+      // ──────────────────────────────────────────────
+      const masterTabBtns = document.querySelectorAll(".master-tab-btn");
+      const masterPanels = {
+        db: document.getElementById("panel-db"),
+        complexity: document.getElementById("panel-complexity"),
+        effort: document.getElementById("panel-effort"),
+      };
+
+      masterTabBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          masterTabBtns.forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          Object.values(masterPanels).forEach((p) =>
+            p.classList.remove("active")
+          );
+          const tab = btn.dataset.tab;
+          if (masterPanels[tab]) {
+            masterPanels[tab].classList.add("active");
+          }
         });
-    });
-</script>
-
-</body>
+      });
+    </script>
+  </body>
 </html>

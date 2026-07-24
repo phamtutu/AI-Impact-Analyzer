@@ -1,208 +1,277 @@
-// ──────────────────────────────────────────────
-//  Complexity Manager - Quản lý độ phức tạp (C1-C5)
-//  Theo bảng tiêu chí chi tiết
+const API = "http://127.0.0.1:8000/api/v1/complexities";
 
-// ──────────────────────────────────────────────
+const state = {
+  editingId: null,
+  editingDisplayOrder: 0,
+  options: null,
+};
 
-// ─── State ───
-let complexityData = [
-    { 
-        id: 1, 
-        level: 'C1',
-        online_table: '2개이하 (Dưới 2)',
-        column_count: '10개 이하 (Dưới 10)',
-        validation_logic: '5개 이하 (Dưới 5)',
-        business_logic: '없음 (Không có)',
-        ui_component: 'Đơn giản',
-        description: 'Độ phức tạp thấp nhất, ít xử lý logic'
-    },
-    { 
-        id: 2, 
-        level: 'C2',
-        online_table: '3개이하 (Dưới 3)',
-        column_count: '10~20',
-        validation_logic: '6~10',
-        business_logic: '1~5',
-        ui_component: 'Trung bình',
-        description: 'Độ phức tạp thấp, logic vừa phải'
-    },
-    { 
-        id: 3, 
-        level: 'C3',
-        online_table: '4개이하 (Dưới 4)',
-        column_count: '15~25',
-        validation_logic: '11~15',
-        business_logic: '6~10',
-        ui_component: 'Phức tạp',
-        description: 'Độ phức tạp trung bình, nhiều logic xử lý'
-    },
-    { 
-        id: 4, 
-        level: 'C4',
-        online_table: '5개 이상 (Trên 5)',
-        column_count: '25 이상 (Trên 25)',
-        validation_logic: '15개 초과 (Vượt quá 15)',
-        business_logic: '10 초과 (Vượt quá 10)',
-        ui_component: 'Rất phức tạp',
-        description: 'Độ phức tạp cao, cần thảo luận kỹ'
-    },
-    { 
-        id: 5, 
-        level: 'C5',
-        online_table: '특이사항 (Đặc thù)',
-        column_count: 'Đặc biệt',
-        validation_logic: 'Đặc biệt',
-        business_logic: 'Đặc biệt',
-        ui_component: 'Đặc biệt phức tạp',
-        description: 'Độ phức tạp đặc biệt, cần thảo luận chi tiết'
-    },
-];
+const $ = (id) => document.getElementById(id);
 
-let nextComplexityId = 6;
+async function request(url, options = {}) {
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    },
+  });
 
-// ─── DOM refs ───
-const complexityBody = document.getElementById('complexityBody');
-const complexityCount = document.getElementById('complexityCount');
+  if (!response.ok) {
+    let message = `HTTP ${response.status}`;
+    try {
+      const body = await response.json();
+      message =
+        typeof body.detail === "string"
+          ? body.detail
+          : JSON.stringify(body.detail);
+    } catch (_) {}
+    throw new Error(message);
+  }
 
-// ─── Helpers ───
-function esc(s) {
-    return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;',
-        "'": '&#39;' }[c]));
+  return response.status === 204 ? null : response.json();
 }
 
-// ─── Render ───
-function renderComplexity() {
-    complexityCount.textContent = complexityData.length;
-    if (!complexityData.length) {
-        complexityBody.innerHTML = `<div class="empty"><div class="glyph">— · · —</div>Chưa có dữ liệu độ phức tạp.</div>`;
-        return;
-    }
+function escapeHtml(value) {
+  return String(value ?? "").replace(
+    /[&<>'"]/g,
+    (character) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "'": "&#39;",
+        '"': "&quot;",
+      }[character])
+  );
+}
 
-    let html = `
-    <div style="overflow-x:auto;margin-bottom:16px;">
-        <div style="background:var(--green-head);border:1px solid var(--green-head-strong);padding:10px 14px;margin-bottom:12px;border-radius:2px;">
-            <div style="display:grid;grid-template-columns:80px 1fr 1fr 1fr 1fr 1fr 120px;gap:6px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#2d4227;">
-                <div>Level</div>
-                <div>Online Table<br><span style="font-weight:400;font-size:10px;">(Loại trừ bảng code)</span></div>
-                <div>Số lượng column/item<br><span style="font-weight:400;font-size:10px;">(Screen, handling)</span></div>
-                <div>Xử lý phức tạp<br><span style="font-weight:400;font-size:10px;">(Validation số 1)</span></div>
-                <div>Xử lý phức tạp<br><span style="font-weight:400;font-size:10px;">(Business logic, Tính toán, UI)</span></div>
-                <div>UI Elements<br><span style="font-weight:400;font-size:10px;">(UI component)</span></div>
-                <div>Thao tác</div>
-            </div>
-        </div>
-        
-        <div style="display:flex;flex-direction:column;gap:4px;">`;
+function fillOptions(select, values, includeAll = false) {
+  select.innerHTML = includeAll ? '<option value="">Tất cả</option>' : "";
+  values.forEach((value) => select.add(new Option(value, value)));
+}
 
-    complexityData.forEach((item, index) => {
-        const colorClass = item.level === 'C1' ? 'tag-blue' : 
-                          item.level === 'C2' ? 'tag-blue' :
-                          item.level === 'C3' ? 'tag-amber' : 
-                          item.level === 'C4' ? 'tag-red' : 'tag-red';
-        
-        const bgColor = index % 2 === 0 ? '#fbfcfa' : '#ffffff';
-        
-        html += `
-            <div style="display:grid;grid-template-columns:80px 1fr 1fr 1fr 1fr 1fr 120px;gap:6px;padding:10px 12px;background:${bgColor};border:1px solid var(--line);border-radius:2px;align-items:center;">
-                <div style="text-align:center;">
-                    <span class="tag ${colorClass}" style="font-size:14px;font-weight:700;padding:4px 10px;">${esc(item.level)}</span>
-                </div>
-                <div style="font-size:12.5px;">${esc(item.online_table)}</div>
-                <div style="font-size:12.5px;">${esc(item.column_count)}</div>
-                <div style="font-size:12.5px;">${esc(item.validation_logic)}</div>
-                <div style="font-size:12.5px;">${esc(item.business_logic)}</div>
-                <div style="font-size:12.5px;">${esc(item.ui_component)}</div>
-                <div>
-                    <div class="actions-cell" style="justify-content:center;">
-                        <button class="btn btn-secondary btn-sm" onclick="window.editComplexity(${item.id})">✏️</button>
-                        <button class="btn btn-danger btn-sm" onclick="window.deleteComplexity(${item.id})">🗑️</button>
+async function loadOptions() {
+  state.options = await request(`${API}/options`);
+  fillOptions($("complexityProcessType"), state.options.process_types);
+}
+
+async function loadComplexities() {
+  try {
+    const data = await request(API);
+    $("complexityCount").textContent = data.total;
+    renderTable(data.items);
+  } catch (error) {
+    showToast(error.message, true);
+  }
+}
+
+function renderTable(items) {
+  const body = $("complexityBody");
+
+  if (!items.length) {
+    body.innerHTML = `
+            <div class="empty">
+                <div class="glyph">— · · —</div>
+                Chưa có dữ liệu độ phức tạp.
+            </div>`;
+    return;
+  }
+
+  const rows = items
+    .map((item) => {
+      const encoded = encodeURIComponent(JSON.stringify(item));
+      const complexityCells = [1, 2, 3, 4, 5]
+        .map(
+          (index) =>
+            `<td class="complexity-cell">${escapeHtml(
+              item[`c${index}_description`]
+            )}</td>`
+        )
+        .join("");
+
+      return `
+            <tr>
+                <td><span class="tag ${
+                  item.process_type === "Batch" ? "tag-amber" : "tag-blue"
+                }">${escapeHtml(item.process_type)}</span></td>
+                <td>${escapeHtml(item.item_name)}</td>
+                ${complexityCells}
+                <td>
+                    <div class="actions-cell">
+                        <button type="button" class="btn btn-secondary btn-sm" data-action="edit" data-item="${encoded}">Sửa</button>
+                        <button type="button" class="btn btn-danger btn-sm" data-action="delete" data-item="${encoded}">Xóa</button>
                     </div>
-                </div>
-            </div>
-        `;
-    });
+                </td>
+            </tr>`;
+    })
+    .join("");
 
-    html += `
+  body.innerHTML = `
+        <div class="complexity-toolbar">
+            <label>
+                Loại hình xử lý
+                <select id="complexityProcessFilter">
+                    <option value="">Tất cả</option>
+                    ${(state.options?.process_types || [])
+                      .map(
+                        (value) =>
+                          `<option value="${escapeHtml(value)}">${escapeHtml(
+                            value
+                          )}</option>`
+                      )
+                      .join("")}
+                </select>
+            </label>
+            <label>
+                Tìm item
+                <input id="complexityKeyword" placeholder="Nhập tên item..." />
+            </label>
+            <button type="button" class="btn btn-secondary" id="filterComplexityBtn">Lọc</button>
         </div>
-    </div>
-    
-    <!-- Legend -->
-    <div style="background:var(--accent-soft);border:1px solid var(--line);padding:10px 14px;border-radius:2px;font-size:11px;color:var(--ink-soft);">
-        <div style="display:flex;gap:20px;flex-wrap:wrap;">
-            <div><span class="tag tag-blue">C1-C2</span> Độ phức tạp thấp</div>
-            <div><span class="tag tag-amber">C3</span> Độ phức tạp trung bình</div>
-            <div><span class="tag tag-red">C4-C5</span> Độ phức tạp cao, cần thảo luận</div>
-           
-        </div>
-    </div>`;
+        <div class="table-scroll">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Process Type</th>
+                        <th>Item</th>
+                        <th>C1</th><th>C2</th><th>C3</th><th>C4</th><th>C5</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>`;
 
-    complexityBody.innerHTML = html;
+  $("filterComplexityBtn").addEventListener("click", filterRenderedRows);
 }
 
-// ─── CRUD Operations ───
-function addComplexity() {
-    const level = prompt('Nhập level (C1, C2, C3, C4, C5):');
-    if (!level) return;
-    
-    const online_table = prompt('Online Table (VD: 2개이하, 3개이하, 4개이하, 5개 이상, 특이사항):') || '';
-    const column_count = prompt('Số lượng column (VD: 10개 이하, 10~20, 15~25, 25 이상, Đặc biệt):') || '';
-    const validation_logic = prompt('Validation logic (VD: 5개 이하, 6~10, 11~15, 15개 초과, Đặc biệt):') || '';
-    const business_logic = prompt('Business logic (VD: 없음, 1~5, 6~10, 10 초과, Đặc biệt):') || '';
-    const ui_component = prompt('UI Component (VD: Đơn giản, Trung bình, Phức tạp, Rất phức tạp, Đặc biệt):') || '';
-    const description = prompt('Mô tả:') || '';
+function filterRenderedRows() {
+  const processType = $("complexityProcessFilter").value;
+  const keyword = $("complexityKeyword").value.trim().toLowerCase();
+  const rows = $("complexityBody").querySelectorAll("tbody tr");
 
-    complexityData.push({
-        id: nextComplexityId++,
-        level,
-        online_table,
-        column_count,
-        validation_logic,
-        business_logic,
-        ui_component,
-        description
-    });
-    renderComplexity();
+  rows.forEach((row) => {
+    const rowProcessType = row.cells[0].textContent.trim();
+    const itemName = row.cells[1].textContent.trim().toLowerCase();
+    const visible =
+      (!processType || rowProcessType === processType) &&
+      (!keyword || itemName.includes(keyword));
+    row.style.display = visible ? "" : "none";
+  });
 }
 
-function editComplexity(id) {
-    const item = complexityData.find(c => c.id === id);
-    if (!item) return;
+function openModal(item = null) {
+  if (item && item.complexity_id == null) {
+    showToast("API không trả complexity_id cho bản ghi cần sửa.", true);
+    return;
+  }
 
-    const level = prompt('Level:', item.level);
-    if (level === null) return;
-    
-    const online_table = prompt('Online Table:', item.online_table) || item.online_table;
-    const column_count = prompt('Số lượng column:', item.column_count) || item.column_count;
-    const validation_logic = prompt('Validation logic:', item.validation_logic) || item.validation_logic;
-    const business_logic = prompt('Business logic:', item.business_logic) || item.business_logic;
-    const ui_component = prompt('UI Component:', item.ui_component) || item.ui_component;
-    const description = prompt('Mô tả:', item.description) || item.description;
+  state.editingId = item ? Number(item.complexity_id) : null;
+  state.editingDisplayOrder = Number(item?.display_order ?? 0);
+  $("complexityModalTitle").textContent = item
+    ? "Sửa Complexity"
+    : "Thêm Complexity";
+  $("complexityProcessType").value =
+    item?.process_type ?? state.options.process_types[0];
+  $("complexityItemName").value = item?.item_name ?? "";
 
-    item.level = level || item.level;
-    item.online_table = online_table;
-    item.column_count = column_count;
-    item.validation_logic = validation_logic;
-    item.business_logic = business_logic;
-    item.ui_component = ui_component;
-    item.description = description;
-    renderComplexity();
+  for (let index = 1; index <= 5; index += 1) {
+    $(`complexityC${index}`).value = item?.[`c${index}_description`] ?? "";
+  }
+
+  $("complexityFormError").textContent = "";
+  $("complexityFormError").classList.add("hidden");
+  $("complexityModal").classList.remove("hidden");
 }
 
-function deleteComplexity(id) {
-    if (!confirm('Bạn có chắc chắn muốn xóa độ phức tạp này?')) return;
-    complexityData = complexityData.filter(c => c.id !== id);
-    renderComplexity();
+function closeModal() {
+  $("complexityModal").classList.add("hidden");
+  $("complexityForm").reset();
+  $("complexityFormError").classList.add("hidden");
+  state.editingId = null;
+  state.editingDisplayOrder = 0;
 }
 
-// ─── Export to global scope ───
-window.addComplexity = addComplexity;
-window.editComplexity = editComplexity;
-window.deleteComplexity = deleteComplexity;
+function formPayload() {
+  const payload = {
+    process_type: $("complexityProcessType").value,
+    item_name: $("complexityItemName").value.trim(),
+    display_order: state.editingDisplayOrder,
+  };
 
-// ─── Event Listeners ───
-document.getElementById('addComplexityBtn').addEventListener('click', addComplexity);
+  for (let index = 1; index <= 5; index += 1) {
+    payload[`c${index}_description`] =
+      $(`complexityC${index}`).value.trim() || null;
+  }
+  return payload;
+}
 
-// ─── Init ───
-renderComplexity();
+async function saveComplexity(event) {
+  event.preventDefault();
+  const isEdit = state.editingId !== null;
+  const url = isEdit ? `${API}/${state.editingId}` : API;
+  const method = isEdit ? "PUT" : "POST";
 
-console.log('✅ Complexity Manager loaded');
+  $("saveComplexityBtn").disabled = true;
+  try {
+    await request(url, { method, body: JSON.stringify(formPayload()) });
+    showToast(
+      isEdit ? "Cập nhật complexity thành công" : "Thêm complexity thành công"
+    );
+    closeModal();
+    await loadComplexities();
+  } catch (error) {
+    $("complexityFormError").textContent = error.message;
+    $("complexityFormError").classList.remove("hidden");
+  } finally {
+    $("saveComplexityBtn").disabled = false;
+  }
+}
+
+async function deleteComplexity(item) {
+  if (!window.confirm(`Xóa item: ${item.item_name}?`)) return;
+  try {
+    await request(`${API}/${item.complexity_id}`, { method: "DELETE" });
+    showToast("Xóa complexity thành công");
+    await loadComplexities();
+  } catch (error) {
+    showToast(error.message, true);
+  }
+}
+
+function showToast(message, isError = false) {
+  const toast = $("complexityToast");
+  toast.textContent = message;
+  toast.classList.toggle("error", isError);
+  toast.classList.remove("hidden");
+  clearTimeout(showToast.timer);
+  showToast.timer = setTimeout(() => toast.classList.add("hidden"), 3500);
+}
+
+function bindEvents() {
+  $("addComplexityBtn").addEventListener("click", () => openModal());
+  $("closeComplexityModal").addEventListener("click", closeModal);
+  $("cancelComplexityBtn").addEventListener("click", closeModal);
+  $("complexityForm").addEventListener("submit", saveComplexity);
+  $("complexityModal").addEventListener("click", (event) => {
+    if (event.target === $("complexityModal")) closeModal();
+  });
+  $("complexityBody").addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-action]");
+    if (!button) return;
+    const item = JSON.parse(decodeURIComponent(button.dataset.item));
+    if (button.dataset.action === "edit") openModal(item);
+    if (button.dataset.action === "delete") deleteComplexity(item);
+  });
+}
+
+(async function initializeComplexityManager() {
+  bindEvents();
+  try {
+    await loadOptions();
+    await loadComplexities();
+  } catch (error) {
+    showToast(error.message, true);
+  }
+})();
